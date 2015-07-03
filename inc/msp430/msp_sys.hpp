@@ -12,10 +12,8 @@ class McuSystem : public SystemBase
 {
 public:
 	static void init();
-	static McuSpeed getSpeed()
-	{
-		return mSpeed;
-	}
+	//static uint32_t getSpeed()
+
 
 };
 

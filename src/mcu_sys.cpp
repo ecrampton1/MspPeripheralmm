@@ -3,7 +3,11 @@
 
 namespace McuPeripheral {
 
-McuSpeed SystemBase::mSpeed = McuSpeed::SPEED_1MHZ;
+uint32_t SystemBase::mSpeed = 1000000;//1MHZ
 
+uint32_t SystemBase::getSpeed()
+{
+		return mSpeed;
+}
 
 }

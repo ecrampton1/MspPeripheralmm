@@ -1,9 +1,10 @@
 #ifndef _MCU_SYS_HPP
 #define _MCU_SYS_HPP
+#include <stdint.h>
 
 namespace McuPeripheral {
 
-enum class McuSpeed { SPEED_1MHZ, SPEED_8MHZ, SPEED_12MHZ, SPEED_16MHZ };
+enum class McuSpeed { SPEED_1MHZ = 1, SPEED_8MHZ= 8, SPEED_12MHZ= 12, SPEED_16MHZ=16 };
 
 #define FOR_ALL_SPEEDS( ACTION )\
 	ACTION( 1MHZ )\
@@ -18,9 +19,10 @@ public:
 	static void init();
 	static void enable_irq();
 	static void disable_irq();
-	static McuSpeed getSpeed();
+	static uint32_t getSpeed();
+
 protected:
-	static McuSpeed mSpeed;
+	static uint32_t mSpeed;
 
 };
 
