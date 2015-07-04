@@ -4,7 +4,7 @@
 
 namespace McuPeripheral {
 
-enum class McuSpeed { SPEED_1MHZ = 1, SPEED_8MHZ= 8, SPEED_12MHZ= 12, SPEED_16MHZ=16 };
+enum class McuSpeed : uint32_t { SPEED_1MHZ = 1000000, SPEED_8MHZ= 8000000, SPEED_12MHZ= 12000000, SPEED_16MHZ=16000000 };
 
 #define FOR_ALL_SPEEDS( ACTION )\
 	ACTION( 1MHZ )\

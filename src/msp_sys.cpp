@@ -16,7 +16,7 @@ void McuSystem<Speed::SPEED_##S>::init() \
 	WDTCTL = WDTPW | WDTHOLD; \
 	BCSCTL1 = CALBC1_##S; \
 	DCOCTL = CALDCO_##S; \
-	mSpeed = static_cast<uint32_t>(Speed::SPEED_##S)*1000000ULL ; \
+	mSpeed = static_cast<uint32_t>(Speed::SPEED_##S) ; \
 }
 FOR_ALL_SPEEDS( INIT_FUNC );
 #undef INIT_FUNC

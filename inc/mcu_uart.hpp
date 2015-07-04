@@ -6,13 +6,13 @@
 namespace McuPeripheral
 {
 
-enum class BaudRate
+enum class BaudRate : uint32_t
 {
-	BAUD_9600 = 96,
-	BAUD_19200 = 192,
-	BAUD_38400 = 384,
-	BAUD_57200 = 572,
-	BAUD_115200 = 1152
+	BAUD_9600 = 9600,
+	BAUD_19200 = 19200,
+	BAUD_38400 = 38400,
+	BAUD_57200 = 57200,
+	BAUD_115200 = 115200
 };
 
 

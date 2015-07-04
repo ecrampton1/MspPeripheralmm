@@ -9,26 +9,28 @@ namespace McuPeripheral
 
 //TODO define the registers of the uart used.
 
+template<typename X,typename Y>
+constexpr uint16_t divide(X x, Y y) { return static_cast<uint32_t>(x) / static_cast<uint32_t>(y);  }
+//constexpr uint8_t mod_calc(uint32_t x, uint16_t y) { return ((x * 16 / (uint16_t) y) - (x / (uint16_t) y * 16) + 1) / 2; }
+template<typename X,typename Y>
+constexpr uint8_t mod_calc(X x, Y y) { return (((static_cast<uint32_t>(x) / static_cast<uint32_t>(y)) - divide(x ,  y)) * 8) << 1; }
 
-template<BaudRate rate, int rxPin, int txPin >
+template<BaudRate rate, Speed clock, int rxPin, int txPin >
 class McuUart : Uart
 {
 public:
+
+	static const uint16_t BAUDREGISTER = divide( clock , rate );
+	static const uint8_t MODVALUE = mod_calc( clock,  rate );
+	//static const uint8_t MODVALUE =
 	static void init()
 	{
-		uint16_t speed = (SystemBase::getSpeed() /100);
 		UCA0CTL1 |= UCSWRST;
 		UCA0CTL0 = UCMODE_0;
 		UCA0CTL1 = UCSSEL_2 | UCSWRST;
-		//UCA0BR0 = ( speed / (uint16_t) rate) & 0xff;
-		//UCA0BR1 = (speed / (uint16_t) rate) >> 8;
-		//uint8_t mod = (freq * 8 / baud) - (freq / baud * 8);
-		// Proper rounding
-		//uint8_t mod = ((speed * 16 / (uint16_t) rate) - (speed / (uint16_t) rate * 16) + 1) / 2;
-		//UCA0MCTL = mod << 1;
-		UCA0BR0 = 138;
-		UCA0BR1 = 0;
-		UCA0MCTL = 0x0E;
+		UCA0BR0 = BAUDREGISTER & 0xFF;
+		UCA0BR1 = BAUDREGISTER >> 8;
+		UCA0MCTL = MODVALUE;
 		P1SEL |= BIT1 | BIT2;
 		P1SEL2 |= BIT1 | BIT2;
 		P1DIR &= ~BIT1;

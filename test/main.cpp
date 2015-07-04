@@ -12,7 +12,7 @@ namespace Periph = McuPeripheral;
 
 typedef Periph::McuPin<McuPort1,BIT0> Led;
 typedef Periph::McuPin<McuPort1,BIT6> Led2;
-typedef Periph::McuUart<Periph::BaudRate::BAUD_115200,BIT1,BIT0> uart;
+typedef Periph::McuUart<Periph::BaudRate::BAUD_115200,Speed::SPEED_16MHZ, BIT1,BIT0> uart;
 
 int main()
 {
@@ -26,7 +26,7 @@ int main()
 	while(1) {
 		Led::toggle();
 		Led2::toggle();
-		__delay_cycles(USHRT_MAX);
+		__delay_cycles(200000);
 		uart::sendStream("Test String \n\r");
 	}
 	return 0;
