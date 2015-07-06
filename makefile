@@ -20,7 +20,7 @@ SOURCES =
 ifdef RF_TEMP_MAIN
 	SOURCES += main_rf_temp.c ./adc_driver/adc.c
 else
-	SOURCES += ./test/main.cpp ./src/msp_sys.cpp ./src/mcu_sys.cpp
+	SOURCES += ./test/main.cpp  ./src/msp_sys.cpp ./src/mcu_sys.cpp
 endif
 # Include are located in the Include directory
 INCLUDES = -I./inc

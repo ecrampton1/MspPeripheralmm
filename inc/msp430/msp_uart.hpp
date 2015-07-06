@@ -1,6 +1,7 @@
 #ifndef _MSP_UART_HPP
 #define _MSP_UART_HPP
 #include "mcu_uart.hpp"
+#include "utilities/utilities.hpp"
 #include <stdint.h>
 #include <msp430.h>
 
@@ -31,37 +32,43 @@ public:
 		UCA0BR0 = BAUDREGISTER & 0xFF;
 		UCA0BR1 = BAUDREGISTER >> 8;
 		UCA0MCTL = MODVALUE;
-		P1SEL |= BIT1 | BIT2;
-		P1SEL2 |= BIT1 | BIT2;
-		P1DIR &= ~BIT1;
+		P1SEL |= rxPin | txPin;
+		P1SEL2 |= rxPin | txPin;
+		P1DIR &= ~rxPin;
 		P1DIR |= BIT2;
 		UCA0CTL1 &= ~UCSWRST;
 	}
-	template<typename T>
-	static const void send(T data)
+
+
+	static const void sendInt( uint64_t data, Base base = Base::BASE_DEC )
 	{
-		uint8_t i = 0;
-		uint8_t* ptr = reinterpret_cast<uint8_t*>(&data);
-		while( i < sizeof(T)) {
-			UCA0TXBUF = *(ptr + i++);  //Sends in Little Endian
-			while (!(IFG2 & UCA0TXIFG));
-		}
+		char buf[sizeof(unsigned)*8 +1];
+		itoa(data,buf, base);
+		sendString(buf);
 	}
 
 	static const void sendStream(uint8_t* data, int numOfBytes)
 	{
 		for(int i = 0; i < numOfBytes; ++i) {
-			send(data[i]);
+			sendByte(data[i]);
 		}
 	}
 
-	static const void sendStream(const char* data)
+	static const void sendString(const char* data)
 	{
 		int i = 0;
 		while(data[i] != 0) {
-			send(data[i++]);
+			sendByte(data[i++]);
 		}
 	}
+
+	inline static const void sendByte(uint8_t data)
+	{
+		UCA0TXBUF = data;  //Sends in Little Endian
+		while (!(IFG2 & UCA0TXIFG));
+	}
+
+private:
 
 
 };
