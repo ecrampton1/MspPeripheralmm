@@ -26,7 +26,7 @@ endif
 INCLUDES = -I./inc
 # Add or subtract whatever MSPGCC flags you want. There are plenty more
 #######################################################################################
-CFLAGS   = -mmcu=$(MCU) -Os -Wall -Wreturn-type -Wunused -s -fdata-sections -ffunction-sections -fno-exceptions -std=c++0x $(INCLUDES)   
+CFLAGS   = -mmcu=$(MCU) -DMSP430_BUILD -Os -Wall -Wreturn-type -Wunused -s -fdata-sections -ffunction-sections -fno-exceptions -std=c++0x $(INCLUDES)   
 ASFLAGS  = -mmcu=$(MCU) -x assembler-with-cpp -Wa
 #LDFLAGS  = -mmcu=$(MCU) --no-keep-memory -Wl,-gc-sections, -Map=$(TARGET).map
 #TODO OPTIMIZE BUILD--no-keep-memory

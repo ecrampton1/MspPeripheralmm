@@ -1,7 +1,6 @@
-#include "msp430/msp_sys.hpp"
-#include "msp430/msp_gpio.hpp"
-#include "msp430/msp_uart.hpp"
+#include "mcu_config.hpp"
 #include <limits.h>
+#include "mcu_config.hpp"
 
 extern "C" {
 #include <stdlib.h>
