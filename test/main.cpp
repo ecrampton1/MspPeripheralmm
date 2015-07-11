@@ -31,8 +31,8 @@ int main()
 		led0::toggle();
 		led1::toggle();
 		__delay_cycles(200000);
-		uart::sendString("Test String \n\r");
-		uart::sendInt(12345);
+		uart::send("Test String \n\r");
+		uart::send(0xABCD,Periph::Base::BASE_BIN);
 	}
 	return 0;
 }

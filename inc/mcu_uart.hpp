@@ -25,7 +25,7 @@ public:
 	//TODO make specialized function
 	//static const void send(float data);
 
-	static const void sendString(const char* data);
+	static const void send(const char* data);
 	static const void sendStream(uint8_t* data, int numOfBytes);
 
 };

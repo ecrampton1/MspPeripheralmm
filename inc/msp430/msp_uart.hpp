@@ -4,6 +4,8 @@
 #include "utilities/utilities.hpp"
 #include <stdint.h>
 #include <msp430.h>
+//#include <stdlib.h>
+#include <math.h>
 
 namespace McuPeripheral
 {
@@ -23,7 +25,6 @@ public:
 
 	static const uint16_t BAUDREGISTER = divide( clock , rate );
 	static const uint8_t MODVALUE = mod_calc( clock,  rate );
-	//static const uint8_t MODVALUE =
 	static void init()
 	{
 		UCA0CTL1 |= UCSWRST;
@@ -40,21 +41,27 @@ public:
 	}
 
 
-	static const void sendInt( uint64_t data, Base base = Base::BASE_DEC )
+	static const void send( int64_t data, Base base )
 	{
 		char buf[sizeof(unsigned)*8 +1];
 		itoa(data,buf, base);
-		sendString(buf);
+		send(buf);
 	}
 
-	static const void sendStream(uint8_t* data, int numOfBytes)
+	static const void send( float data, int precision=2)
+	{
+		//TODO implement??
+
+	}
+
+	static const void send(uint8_t* data, int numOfBytes)
 	{
 		for(int i = 0; i < numOfBytes; ++i) {
 			sendByte(data[i]);
 		}
 	}
 
-	static const void sendString(const char* data)
+	static const void send(const char* data)
 	{
 		int i = 0;
 		while(data[i] != 0) {
