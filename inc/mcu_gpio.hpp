@@ -23,6 +23,6 @@ class Port
 public:
 };
 
-};
+}
 
 #endif //_MCU_GPIO_HPP

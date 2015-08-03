@@ -28,7 +28,7 @@ protected:
 
 
 
-};
+}
 
 
 #endif //_MCU_SYS_HPP

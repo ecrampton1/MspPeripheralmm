@@ -41,7 +41,7 @@ public:
 	}
 
 
-	static const void send( int64_t data, Base base )
+	static const void send( int64_t data, Base base=Base::BASE_DEC )
 	{
 		char buf[sizeof(unsigned)*8 +1];
 		itoa(data,buf, base);
@@ -63,6 +63,9 @@ public:
 
 	static const void send(const char* data)
 	{
+		if(data == 0)
+			return;
+
 		int i = 0;
 		while(data[i] != 0) {
 			sendByte(data[i++]);
@@ -73,6 +76,12 @@ public:
 	{
 		UCA0TXBUF = data;  //Sends in Little Endian
 		while (!(IFG2 & UCA0TXIFG));
+	}
+
+	inline static const void sendLine(const char* data=0)
+	{
+		send(data);
+		send("\n");
 	}
 
 private:

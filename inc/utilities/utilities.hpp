@@ -12,6 +12,7 @@ enum class Base : int
 
 };
 
+#if 0
 static void itoa(long unsigned int value, char* result, Base base)
 {
   // check that the base if valid
@@ -37,7 +38,48 @@ static void itoa(long unsigned int value, char* result, Base base)
   }
 
 }
+#endif
 
+
+//TODO more optimization on this?
+static char *itoa(long unsigned int num, char *str, Base base)
+{
+  long unsigned int value;
+  char *sp = str;
+  char *sp2;
+
+  value = num;
+#if ! (UNSIGNED - 0)
+  /* Store sign at start of buffer for negative base-10 values */
+  if (10 == (int)base && 0 > num) {
+    *sp++ = '-';
+    value = -num;
+  }
+#endif
+  sp2 = sp;
+
+  do {
+    char rem = value % (int)base;
+    value /= (int)base;
+    if (10 > rem) {
+      *sp++ = '0' + rem;
+    } else {
+      *sp++ = 'A' + rem - 10;
+    }
+  } while (0 < value);
+
+  /* Mark end of string */
+  *sp-- = 0;
+
+  /* Reverse string contents (excluding sign) in place */
+  while (sp2 < sp) {
+    char tmp = *sp2;
+    *sp2++ = *sp;
+    *sp-- = tmp;
+  }
+
+  return str;
+}
 
 void
 ftoa(float f,char *buf,int dplaces)

@@ -30,5 +30,5 @@ public:
 
 };
 
-};
+}
 #endif //_MCU_UART_HPP

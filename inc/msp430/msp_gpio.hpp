@@ -58,7 +58,7 @@ public:
 		*((volatile uint8_t*)_port::mResistor) &= ~_pin;
 	}
 };
-};
+}
 
 typedef McuPeripheral::McuPort<P1IN_,P1OUT_,P1DIR_,P1REN_> McuPort1;
 typedef McuPeripheral::McuPort<P2IN_,P2OUT_,P2DIR_,P2REN_> McuPort2;
