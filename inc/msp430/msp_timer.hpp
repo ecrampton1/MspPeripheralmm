@@ -35,10 +35,6 @@ template<uint16_t _control, uint16_t _conunter, uint16_t _interrupt, TimerSource
 class TimerControl
 {
 public:
-	//static const int mControlReg = _control;
-	//static const int mCounterReg = _conunter;
-	//static const int mInterruptReg = _interrupt;
-	//TODO remove these damn typedefs
 	static callback_t mTimerHandler;
 	static void* mTimerArgs;
 
@@ -60,22 +56,12 @@ constexpr uint32_t compute_rollover()
 	return (r == TimerSource::SMCLK) ? (s / 1000000.0) / (1 / ( c / 1.0 ) * 65535.0) : 0; //TODO ACLK
 }
 
-/*constexpr uint16_t compute_ccr0(TimerSource source,  float microSeconds, float clock)
-{
-	//return (source == TimerSource::SMCLK) ? (uint16_t)((microSeconds / 1000000.0) / (1.0 / ( clock / 8.0 ) )) % 0xFFFF : 0; //TODO ACLK
-	return (source == TimerSource::SMCLK) ? (uint16_t) 0xFFFF : 0; //TODO ACLK
-}*/
 
 template<TimerSource _source, class _timer, uint64_t _microSeconds, int32_t _clock >
 class McuTimer : public TimerBase< McuTimer< _source, _timer, _microSeconds, _clock> >
 {
 public:
-	//static void init()
-	//{
-//
-	//}
 
-	static void value() { }
 	static int start()
 	{
 		//check if timer be running
@@ -106,10 +92,9 @@ public:
 	static uint32_t mRollOverCount;
 	static uint16_t mTimerCCR0Count;
 
-	//TODO make these private they are just public for now for easy debugging
+private:
 	static constexpr uint32_t ROLLOVER = compute_rollover<_source, _microSeconds, _clock>();
 	static constexpr uint16_t TIMERCCR0 = 0;
-private:
 
 	//static const uint16_t TIMERCCR0 = 0;
 	//static const uint16_t TIMERCCR0 = compute_ccr0(_source, _microSeconds, _clock);
@@ -119,8 +104,6 @@ template<TimerSource _source, class _timer, uint64_t _microSeconds, int32_t _clo
 uint32_t McuTimer< _source, _timer, _microSeconds, _clock>::mRollOverCount;
 template<TimerSource _source, class _timer, uint64_t _microSeconds, int32_t _clock >
 uint16_t McuTimer< _source, _timer, _microSeconds, _clock>::mTimerCCR0Count;
-
-
 
 }
 

@@ -1,7 +1,10 @@
 #include "msp430/msp_sys.hpp"
-#include <msp430.h>
 
+volatile uint32_t mWatchDogCounter = 0;
 namespace McuPeripheral {
+
+
+
 
 void enable_irq()  { __eint(); }
 void disable_irq()  { __dint(); }
@@ -13,7 +16,7 @@ void disable_irq()  { __dint(); }
 template<> \
 void McuSystem<Speed::SPEED_##S>::init() \
 { \
-	WDTCTL = WDTPW | WDTHOLD; \
+	disableWatchDog(); \
 	BCSCTL1 = CALBC1_##S; \
 	DCOCTL = CALDCO_##S; \
 	mSpeed = static_cast<uint32_t>(Speed::SPEED_##S) ; \
@@ -21,4 +24,14 @@ void McuSystem<Speed::SPEED_##S>::init() \
 FOR_ALL_SPEEDS( INIT_FUNC );
 #undef INIT_FUNC
 
+
+
+
+}
+
+
+__attribute__((__interrupt__(WDT_VECTOR)))
+void watchDog (void)
+{
+	++mWatchDogCounter;
 }
