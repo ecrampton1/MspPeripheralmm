@@ -12,7 +12,8 @@
 #TARGET     = rf24_temp_msp
 TARGET     = msp_test
 MCU        = msp430g2553
-GDB        = msp430-gdb
+CROSS	   = /usr/local/msp430/bin/msp430
+GDB        = $(CROSS)-gdb
 # List all the source files here
 # eg if you have a source file foo.c then list it here
 SOURCES = 
@@ -32,20 +33,22 @@ ASFLAGS  = -mmcu=$(MCU) -x assembler-with-cpp -Wa
 #TODO OPTIMIZE BUILD--no-keep-memory
 #CFLAGS   = -mmcu=$(MCU) -Os -Wall -Wunused -s -fdata-sections -ffunction-sections $(INCLUDES)   
 #ASFLAGS  = -mmcu=$(MCU) -x assembler-with-cpp -Wa 
-LDFLAGS  = -mmcu=$(MCU) --no-keep-memory -Wl,--gc-sections,-Map=$(TARGET).map
+#LDFLAGS  = -mmcu=$(MCU) --no-keep-memory -Wl,--gc-sections,-Map=$(TARGET).map
+LDFLAGS  = -mmcu=$(MCU) -Wl,--gc-sections,-Map=$(TARGET).map
+#LDFLAGS += -T /opt/gcc-msp430-elf-dev-20150811/msp430-elf/include/msp430g2553.ld
 ########################################################################################
-CC       = msp430-gcc
-CXX		 = msp430-g++
-LD       = msp430-ld
-AR       = msp430-ar
-AS       = msp430-gcc
-GASP     = msp430-gasp
-NM       = msp430-nm
-OBJCOPY  = msp430-objcopy
-RANLIB   = msp430-ranlib
-STRIP    = msp430-strip
-SIZE     = msp430-size
-READELF  = msp430-readelf
+CC       = $(CROSS)-gcc
+CXX		 = $(CROSS)-g++
+LD       = $(CROSS)-ld
+AR       = $(CROSS)-ar
+AS       = $(CROSS)-gcc
+GASP     = $(CROSS)-gasp
+NM       = $(CROSS)-nm
+OBJCOPY  = $(CROSS)-objcopy
+RANLIB   = $(CROSS)-ranlib
+STRIP    = $(CROSS)-strip
+SIZE     = $(CROSS)-size
+READELF  = $(CROSS)-readelf
 CP       = cp -p
 RM       = rm -f
 MV       = mv

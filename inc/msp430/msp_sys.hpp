@@ -62,10 +62,5 @@ public:
 
 }
 
-
-
-
-
-
-typedef McuPeripheral::McuSpeed Speed;
+using Speed =  McuPeripheral::McuSpeed;
 #endif //_MSP_SYS_HPP

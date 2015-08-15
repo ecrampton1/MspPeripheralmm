@@ -60,6 +60,6 @@ public:
 };
 }
 
-typedef McuPeripheral::McuPort<P1IN_,P1OUT_,P1DIR_,P1REN_> McuPort1;
-typedef McuPeripheral::McuPort<P2IN_,P2OUT_,P2DIR_,P2REN_> McuPort2;
+using McuPort1 =  McuPeripheral::McuPort<P1IN_,P1OUT_,P1DIR_,P1REN_>;
+using McuPort2 =  McuPeripheral::McuPort<P2IN_,P2OUT_,P2DIR_,P2REN_>;
 #endif //_MSP_GPIO_HPP

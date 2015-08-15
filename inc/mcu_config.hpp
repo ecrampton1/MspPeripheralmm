@@ -11,10 +11,10 @@ namespace Periph = McuPeripheral;
 #define  uart_rx BIT1
 #define  uart_tx BIT2
 
-typedef Periph::McuPin<McuPort1,BIT0> led0;
-typedef Periph::McuPin<McuPort1,BIT6> led1;
-typedef Periph::McuUart<Periph::BaudRate::BAUD_115200,Speed::SPEED_16MHZ, uart_rx, uart_tx> uart;
-typedef Periph::McuSystem<Speed::SPEED_16MHZ> sys;
+using led0 =  Periph::McuPin<McuPort1,BIT0>;
+using led1 =  Periph::McuPin<McuPort1,BIT6>;
+using uart =  Periph::McuUart<Periph::BaudRate::BAUD_115200,Speed::SPEED_16MHZ, uart_rx, uart_tx>;
+using sys =  Periph::McuSystem<Speed::SPEED_16MHZ>;
 
 #endif
 

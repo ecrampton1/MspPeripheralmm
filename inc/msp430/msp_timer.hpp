@@ -107,13 +107,14 @@ uint16_t McuTimer< _source, _timer, _microSeconds, _clock>::mTimerCCR0Count;
 
 }
 
-typedef McuPeripheral::TimerSource TimerSrc;
-typedef McuPeripheral::TimerControl<TACTL_, TAR_, TAIV_, McuPeripheral::TimerSource::SMCLK> timerA0;
+using TimerSrc = McuPeripheral::TimerSource;
+using TimerA0 = McuPeripheral::TimerControl<TACTL_, TAR_, TAIV_, McuPeripheral::TimerSource::SMCLK>;
 
-__attribute__((__interrupt__(TIMER0_A1_VECTOR)))
-//#pragma vector=TIMER0_A0_VECTOR
-//__interrupt void Timer_A0(void)
-void Timer_A (void)
+//#include <signal.h>
+//__attribute__((__interrupt__(TIMER0_A1_VECTOR)))
+#pragma vector=TIMER0_A1_VECTOR
+__attribute__((__interrupt__)) void Timer_A1(void)
+//static void Timer_A (void)
 //interrupt (TIMER0_A1_VECTOR) TA0_isr(void)
 {
 	//static uint32_t mRollOverCount = 0;
