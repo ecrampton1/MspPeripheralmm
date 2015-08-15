@@ -48,11 +48,11 @@ public:
 		send(buf);
 	}
 
-	//static const void send( float data, int precision=2)
-	//{
+	static const void send( float data, int precision=2)
+	{
 		//TODO implement??
 
-	//}
+	}
 
 	static const void send(uint8_t* data, int numOfBytes)
 	{

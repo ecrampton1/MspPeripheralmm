@@ -21,7 +21,7 @@ int main()
 {
 
 	sys::init();
-	sys::enabletWatchDog(); //starts couting for system time
+	sys::enabletWatchDog(); //starts counting for system time
 	led0::output();
 	led1::output();
 	uart::init();
@@ -31,10 +31,6 @@ int main()
 	uart::sendLine();
 	uart::send(0xAAABB, Periph::Base::BASE_HEX);
 
-	//uart::sendLine();
-	//mcuTimer::stop();
-	//mcuTimer::set_callback(&periodicPrint,0);
-	//int ret = mcuTimer::start();
 	_EINT();
 
 	//if(ret < 0)
@@ -44,9 +40,9 @@ int main()
 		led1::toggle();
 
 		//while(!timerElapsed) { }
-		uart::send( sys::millis() );
+		uart::send( static_cast<int64_t>(sys::millis()) );
 		uart::sendLine();
-		uart::send( sys::micros() );
+		uart::send( static_cast<int64_t>(sys::micros()) );
 		uart::sendLine();
 		uart::sendLine();
 		__delay_cycles(5000000);
