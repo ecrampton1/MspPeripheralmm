@@ -9,7 +9,6 @@
 # $(TARGET).elf $(TARGET).hex and $(TARGET).txt nad $(TARGET).map are all generated.
 # The TXT file is used for BSL loading, the ELF can be used for JTAG use
 # 
-#TARGET     = rf24_temp_msp
 TARGET     = msp_test
 MCU        = msp430g2553
 CROSS	   = /usr/local/msp430/bin/msp430
@@ -21,13 +20,13 @@ SOURCES =
 ifdef RF_TEMP_MAIN
 	SOURCES += main_rf_temp.c ./adc_driver/adc.c
 else
-	SOURCES += ./test/main.cpp  ./src/msp430/msp_sys.cpp ./src/mcu_sys.cpp
+	SOURCES += ./test/main_cal.cpp  ./src/msp430/msp_sys.cpp ./src/mcu_sys.cpp ./src/msp430/msp_timer.cpp
 endif
 # Include are located in the Include directory
 INCLUDES = -I./inc
 # Add or subtract whatever MSPGCC flags you want. There are plenty more
 #######################################################################################
-CFLAGS   = -mmcu=$(MCU) -DMSP430_BUILD -Os -Wall -pedantic -Wreturn-type -Wunused -s -fdata-sections -ffunction-sections -g -fno-exceptions -std=c++0x $(INCLUDES)   
+CFLAGS   = -mmcu=$(MCU) -DMSP430_BUILD -Os -Wall -pedantic -Wreturn-type -Wunused -s -fdata-sections -ffunction-sections -g -MMD -fwrapv -fomit-frame-pointer -fno-exceptions -std=c++0x $(INCLUDES)   
 ASFLAGS  = -mmcu=$(MCU) -x assembler-with-cpp -Wa
 #LDFLAGS  = -mmcu=$(MCU) --no-keep-memory -Wl,-gc-sections, -Map=$(TARGET).map
 #TODO OPTIMIZE BUILD--no-keep-memory

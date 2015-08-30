@@ -4,7 +4,7 @@
 
 namespace McuPeripheral {
 
-static void dummy(void* args) {}
+//static void dummy(void* args) {}
 
 typedef void (*callback_t) (void*);
 

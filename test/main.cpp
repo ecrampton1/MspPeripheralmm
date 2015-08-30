@@ -1,14 +1,11 @@
 #include "mcu_config.hpp"
-#include <limits.h>
-#include "msp430/msp_timer.hpp"
 #include <msp430.h>
-//#include <legacymsp430.h>
+
 
 extern "C" {
 #include <stdlib.h>
 }
 
-using mcuTimer = Periph::McuTimer< TimerSrc::SMCLK, TimerA0, 100000 , (int32_t) Speed::SPEED_16MHZ >;
 
 static volatile bool timerElapsed = false;
 void periodicPrint(void* args)
@@ -21,20 +18,21 @@ int main()
 {
 
 	sys::init();
-	sys::enabletWatchDog(); //starts counting for system time
-	led0::output();
-	led1::output();
+	//sys::enabletWatchDog(); //starts counting for system time
+	//led0::output();
+	//led1::output();
 	uart::init();
+	uart::send("Hello world!\n");
 
-	uart::sendLine();
-	uart::send( (int64_t) 1110 );
-	uart::sendLine();
-	uart::send(0xAAABB, Periph::Base::BASE_HEX);
+	//mcuTimer0::stop();
+	//mcuTimer0::set_callback(&periodicPrint,0);
+	//int ret = mcuTimer0::start();
 
-	_EINT();
+	//_EINT();
 
 	//if(ret < 0)
 		//uart::sendLine("Failed to start timer");
+#if 0
 	while(1) {
 		led0::toggle();
 		led1::toggle();
@@ -49,5 +47,17 @@ int main()
 		//timerElapsed = false;
 	}
 	return 0;
+#endif
+	while(1) {
+		//led0::toggle();
+		//led1::toggle();
+
+		while(!timerElapsed) { }
+
+		uart::sendLine("C");
+		timerElapsed = false;
+	}
+
+	return 1;
 }
 

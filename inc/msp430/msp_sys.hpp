@@ -21,10 +21,6 @@ constexpr uint16_t watchdog_interval_us(McuSpeed m)
 	return (m == McuSpeed::SPEED_1MHZ) ? 512 : 8192.0 / ((float)m / 1000000.0);
 }
 
-/*constexpr uint16_t watchdog_ms_inc(McuSpeed m)
-{
-	return (m == McuSpeed::SPEED_1MHZ) ? 8192 : 8192 / (m / 1000000);
-}*/
 
 template<McuSpeed M>
 class McuSystem : public SystemBase
@@ -35,16 +31,16 @@ public:
 	 */
 	static void init();
 
-	static void inline enabletWatchDog()
+	static void inline enableWatchDog()
 	{
 		 WDTCTL = watchdog_control(M);              // WDT as interval timer .5ms (1Mhz) 1ms (8mhz) .666 (12 mhz) .5ms (16mhz)
 		 IE1 |= WDTIE;
 		 _BIS_SR(GIE);
 	}
 
-	static inline void disableWatchDog()
+	static void inline disableWatchDog()
 	{
-	        /* Diable watchdog timer */
+	         //Diable watchdog timer
 		WDTCTL = WDTPW | WDTHOLD;
 	}
 
