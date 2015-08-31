@@ -16,6 +16,7 @@ constexpr Speed clock_speed = Speed::SPEED_16MHZ;
 using led0 =  Periph::McuPin<McuPort1,BIT0>;
 using led1 =  Periph::McuPin<McuPort1,BIT6>;
 using smclk_out =  Periph::McuPin<McuPort1,BIT4>;
+
 using uart =  Periph::McuUart<Periph::BaudRate::BAUD_115200,clock_speed, uart_rx, uart_tx>;
 using sys =  Periph::McuSystem<clock_speed>;
 //using mcuTimer0 = Periph::McuTimer< Timer_Source::SMCLK, Timer0_A0, 100000 , (int32_t) Speed::SPEED_16MHZ >;

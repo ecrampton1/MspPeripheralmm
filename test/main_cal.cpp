@@ -7,17 +7,6 @@ extern "C" {
 }
 
 
-/*static volatile bool timerElapsed = false;
-void periodicPrint(void* args)
-{
-	timerElapsed = true;
-
-}*/
-
-constexpr uint16_t EXPECTED = 1953;
-
-
-//template<TimerSource _source, class _timer, class _pin, int32_t _clock >
 class Calibration
 {
 public:
@@ -27,29 +16,22 @@ public:
 		smclk_out::select_on();
 		smclk_out::select2_off();
 		smclk_out::output();
+		led0::select_on();
+		led0::select2_off();
+		led0::output();
 
-		/*//check if timer be running
-		if(!Timer0_A0::is_running()) {
-			_DINT();
-			//Set up the output in
-			smclk_out::select_on();
-			smclk_out::select2_off();
-			smclk_out::output();
-			Timer0_A0::clear_timer();
-			Timer0_A0::start_timer(Timer_Mode::CONT_MODE,Timer_Source::SMCLK);
-			_EINT();
-			return 0;
-		}*/
-
-		startCapture();
-
-		while(1) {
-			uint16_t value = getCaptureValue();
-			uart::send((int64_t) value );
-			uart::sendLine();
+		for(int i = 0; i < 4; i++) {
+			startCapture();
+			updateClockValues(mExpectedValues[i]);
+			mCalConstants[i].bcsctl1 = BCSCTL1;
+			mCalConstants[i].dcoctl = DCOCTL;
+			stopCapture();
 		}
+
+		writeNewClockValues();
+
 		Timer0::stop_timer();
-		return -1;
+		return 0;
 	}
 private:
 	struct CalConstants {
@@ -57,15 +39,55 @@ private:
 		uint8_t bcsctl1;
 	};
 
+	static void writeNewClockValues()
+	{
+		//TODO create flash writing class
+		char* Flash_ptrA = (char *)0x10C0;              // Point to beginning of seg A
+		FCTL2 = FWKEY + FSSEL0 + FN1;             // MCLK/3 for Flash Timing Generator
+		FCTL1 = FWKEY + ERASE;                    // Set Erase bit
+		FCTL3 = FWKEY + LOCKA;                    // Clear LOCK & LOCKA bits
+		*Flash_ptrA = 0x00;                       // Dummy write to erase Flash seg A
+		FCTL1 = FWKEY + WRT;                      // Set WRT bit for write operation
+		Flash_ptrA = (char *)0x10F8;              // Point to beginning of cal consts
+		for (int j = 0; j < 4; j++) {
+			*Flash_ptrA++ = mCalConstants[j].dcoctl;            // re-flash DCO calibration data
+			*Flash_ptrA++ = mCalConstants[j].bcsctl1;            // re-flash DCO calibration data
+		}
+		FCTL1 = FWKEY;                            // Clear WRT bit
+		FCTL3 = FWKEY + LOCKA + LOCK;             // Set LOCK & LOCKA bit
+	}
+
+	static void updateClockValues(uint16_t expected)
+	{
+		uint16_t capture, diff, capture_old = 0;
+		while(1) {
+			capture = getCaptureValue();
+			diff = capture - capture_old;
+			capture_old = capture;
+
+			if(expected == diff) {
+				return;
+			}
+			else if(expected < diff) {
+				--DCOCTL;
+				if(DCOCTL == 0xFF)
+					if (BCSCTL1 & 0x0f)
+						--BCSCTL1;
+			}
+			else
+			{
+				++DCOCTL;
+				if(DCOCTL == 0x00)
+					if ((BCSCTL1 & 0x0f) != 0x0f)
+						++BCSCTL1;
+			}
+		}
+	}
+
 	static uint16_t getCaptureValue()
 	{
 		//start timer and get capture
-		while(!Timer0::CapCompControl0::read_capture_flag())
-		{
-			__delay_cycles(10000);
-			//uart::send(REG_16(TACCTL0_), McuPeripheral::Base::BASE_HEX);
-			//uart::sendLine();
-		}
+		while(!Timer0::CapCompControl0::read_capture_flag()){}
 		return Timer0::CapCompControl0::get_cap_comp_value();
 	}
 
@@ -75,12 +97,9 @@ private:
 		//Set up the output in
 		//Setup to capture aclk using smclk as source
 		Timer0::CapCompControl0::start_capture(McuPeripheral::CapCompSelect::CCIB);
-		uart::send(REG_16(TACCTL0_), McuPeripheral::Base::BASE_HEX);
-		uart::sendLine();
-		Timer0::start_timer(Timer_Mode::CONT_MODE,Timer_Source::SMCLK);
-		uart::send(REG_16(TACTL_), McuPeripheral::Base::BASE_HEX);
-		uart::sendLine();
 		Timer0::clear_timer();
+		Timer0::start_timer(Timer_Mode::CONT_MODE,Timer_Source::SMCLK);
+
 	}
 
 	static void stopCapture()
@@ -89,53 +108,32 @@ private:
 		Timer0::stop_timer();
 	}
 
-	CalConstants mCalConstants[4];
+	static CalConstants mCalConstants[4];
+	static constexpr uint16_t EXPECTED_16MHZ = 3906;
+	static constexpr uint16_t EXPECTED_12MHZ = 2930;
+	static constexpr uint16_t EXPECTED_8MHZ = 1953;
+	static constexpr uint16_t EXPECTED_1MHZ = 244;
+
+	static uint16_t mExpectedValues[4];
 
 
 };
 
+uint16_t Calibration::mExpectedValues[4] = { EXPECTED_1MHZ,EXPECTED_8MHZ,EXPECTED_12MHZ,EXPECTED_16MHZ };
+Calibration::CalConstants Calibration::mCalConstants[4];
 
 
 int main()
 {
-	sys::init();
+	sys::disableWatchDog();
 	uart::init();
 	uart::send("Starting DCO calibration!\n");
-	led0::output();
+	led1::output();
+	__delay_cycles(100000);
 	Calibration::start();
 
-
-
-
-	//Start with SMCLK
-	//Timer0_A0::clear_timer();
-	//Timer0_A0::start_timer(Timer_Mode::CONT_MODE,Timer_Source::SMCLK);
-
-	//Start with ACLK
-	//Timer1_A0::clear_timer();
-	//Timer1_A0::start_timer(Timer_Mode::CONT_MODE,Timer_Source::ACLK);
-
-	//int ret = timer0Output::start();
-	/*if(ret <0) {
-		uart::sendLine("Failed to start");
-	}
-	uint16_t start = 0;
-	uint16_t stop  = 0;*/
 	while(1) {
-		led0::toggle();
-		/*while(Timer1_A0::count_value() != 0);
-		start = Timer0_A0::count_value();
-
-		while(Timer1_A0::count_value() < 4);
-		stop = Timer0_A0::count_value();
-
-		uart::send((int64_t)start);
-		uart::sendLine();
-		uart::send((int64_t)stop);
-		uart::sendLine();
-		uart::send((int64_t)(stop - start));
-		uart::sendLine();*/
-
+		led1::toggle();
 	}
 
 	return 1;

@@ -93,7 +93,7 @@ public:
 	{
 		//read the capture input flag and clear it.
 		bool ret = CCIFG & REG_16(_ccc);
-		if(ret) { REG_16(_ccc) &= CCIFG; }
+		if(ret) { REG_16(_ccc) &= ~CCIFG; }
 		return  ret;
 	}
 
