@@ -20,10 +20,10 @@ SOURCES =
 ifdef RF_TEMP_MAIN
 	SOURCES += main_rf_temp.c ./adc_driver/adc.c
 else
-	SOURCES += ./test/main_cal.cpp  ./src/msp430/msp_sys.cpp ./src/mcu_sys.cpp ./src/msp430/msp_timer.cpp
+	SOURCES += ./test/main_cal.cpp  ./src/msp430/msp_sys.cpp ./src/msp430/msp_timer.cpp
 endif
 # Include are located in the Include directory
-INCLUDES = -I./inc
+INCLUDES = -I./inc -I./inc/libraries
 # Add or subtract whatever MSPGCC flags you want. There are plenty more
 #######################################################################################
 CFLAGS   = -mmcu=$(MCU) -DMSP430_BUILD -Os -Wall -pedantic -Wreturn-type -Wunused -s -fdata-sections -ffunction-sections -g -MMD -fwrapv -fomit-frame-pointer -fno-exceptions -std=c++0x $(INCLUDES)   
