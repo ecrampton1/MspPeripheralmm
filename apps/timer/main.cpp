@@ -1,6 +1,9 @@
 #include "mcu_config.hpp"
+//#include <limits.h>
+//#include "msp430/msp_timer.hpp"
 #include <msp430.h>
-
+//#include <legacymsp430.h>
+//#include "msp430/msp_timer.hpp"
 
 extern "C" {
 #include <stdlib.h>
@@ -24,14 +27,14 @@ int main()
 	uart::init();
 	uart::send("Hello world!\n");
 
-	//mcuTimer0::stop();
-	//mcuTimer0::set_callback(&periodicPrint,0);
-	//int ret = mcuTimer0::start();
+	mcuTimer0::stop();
+	mcuTimer0::set_callback(&periodicPrint,0);
+	int ret = mcuTimer0::start();
 
-	//_EINT();
+	_EINT();
 
-	//if(ret < 0)
-		//uart::sendLine("Failed to start timer");
+	if(ret < 0)
+		uart::sendLine("Failed to start timer");
 #if 0
 	while(1) {
 		led0::toggle();
@@ -57,7 +60,10 @@ int main()
 		uart::sendLine("C");
 		timerElapsed = false;
 	}
+#if 0
 
-	return 1;
+#endif
+
+	//while(1);
 }
 
