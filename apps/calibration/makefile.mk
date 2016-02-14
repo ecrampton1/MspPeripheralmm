@@ -1,4 +1,4 @@
-TARGET:=gpio
+TARGET:=calibration
 
 #mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
 

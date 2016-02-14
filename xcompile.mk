@@ -8,7 +8,9 @@ TOOLS_PATH   := $(dir $(shell which $(TOOLS_PREFIX)g++))
 
 # Compiler/linker flags to sepcify CPU
 MMCU := msp430g2553
-CPU_FLAGS   := -mmcu=$(MMCU) -Os -Wall -minrt -pedantic -Wreturn-type -Wunused -s -fdata-sections -ffunction-sections -g -MMD -fwrapv -fomit-frame-pointer -fno-exceptions 
+CPU_FLAGS   := -mmcu=$(MMCU) -Os -Wall -minrt -pedantic -Wreturn-type -Wunused -s -fdata-sections -ffunction-sections -g -fwrapv -fomit-frame-pointer -fno-exceptions 
+#CPU_FLAGS   := -mmcu=$(MMCU) -Wall -minrt -pedantic -Wreturn-type -Wunused -g -MMD -fwrapv -fomit-frame-pointer -fno-exceptions
+
 
 LDSCRIPTS   := $(TOOLS_PATH)../msp430-elf/include/$(MMCU).ld
 #SYSINCLUDE  := $(TOOLS_PATH)/include
