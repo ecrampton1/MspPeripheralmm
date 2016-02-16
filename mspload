@@ -1,0 +1,5 @@
+#/!bin/bash
+
+echo "Loading Msp430 $1"
+mspdebug rf2500 "prog $1"
+
