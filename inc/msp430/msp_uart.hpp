@@ -25,7 +25,7 @@ public:
 
 	static const uint8_t BAUDREGISTER = divide( clock , rate );
 	static const uint8_t MODVALUE = mod_calc( clock,  rate );
-	/*static void init()
+	static void init()
 	{
 		UCA0CTL1 = UCSWRST;
 		UCA0CTL0 = UCMODE_0;
@@ -35,9 +35,9 @@ public:
 		P1SEL |= rxPin | txPin;
 		P1SEL2 |= rxPin | txPin;
 		UCA0CTL1 = UCSSEL_2;
-	}*/
+	}
 
-	static void init()
+	/*static void init()
 	{
 		BCSCTL1 |= DIVA_0;				// ACLK/8
 		BCSCTL3 |= XCAP_3;
@@ -55,19 +55,19 @@ public:
 		P1SEL2 |= rxPin | txPin;
 		UCA0CTL1 &= ~UCSWRST;                    // release from reset
 
-	}
+	}*/
 
-
-	static const void send( int64_t data, Base base=Base::BASE_DEC )
+	template<class T>
+	static const void send( T data, Base base=Base::BASE_HEX )
 	{
-		char buf[sizeof(unsigned)*8 +1];
-		itoa(data,buf, base);
-		send(buf);
+		static char buf[sizeof(T)*8 +1];
+		itoa((uint64_t)data,buf, base);
+		send(static_cast<const char*>(buf));
 	}
 
 	static const void send( float data, int precision=2)
 	{
-		//TODO implement??
+		//TODO implement (look into fixed point) ??
 
 	}
 

@@ -4,6 +4,8 @@ MSPLOAD:= ./mspload
 
 include xcompile.mk
 
+BINDIR := ./msp_bin
+
 #pass in the app to build
 ifndef APP
 $(error no app specified)
@@ -76,10 +78,11 @@ $($(TARGET)_objdir)/%.d: %.cpp
 
 .PHONY: $(TARGET)
 $(TARGET): $($(TARGET)_file)
-$($(TARGET)_file): $($(TARGET)_deps) $($(TARGET)_objs)
+$($(TARGET)_file): $($(TARGET)_deps) $($(TARGET)_objs) $(BINDIR)
 	@echo Hello World $($(TARGET)_deps)
 	$(CXX) -o $@ $($(TARGET)_objs) $($(TARGET)_cxxflags) $(CXXFLAGS) $($(TARGET)_ldflags) $(LDFLAGS)
 	$(SIZE) $@
+	@cp $@ $(BINDIR)
 
 .DEFAULT_GOAL:=
 .PHONY: all clean-all
@@ -87,14 +90,14 @@ all: $(TARGET)
 
 .PHONY: clean
 clean:
-	rm -rf  $($(TARGET)_file) $($(TARGET)_objs) $($(TARGET)_objdir)
+	rm -rf  $($(TARGET)_file) $($(TARGET)_objs) $($(TARGET)_objdir) $(BINDIR)
         
 .PHONY: install
 install:
 	$(MSPLOAD)  $($(TARGET)_file)
 
 all_objdirs:=$(sort $(OBJDIR_BASE) $(OBJDIR) $(all_objdirs))# sort them to get rid of any dupes
-all_objdirs += $($(TARGET)_objdir)
+all_objdirs += $($(TARGET)_objdir) $(BINDIR)
 
 $(all_objdirs):
 	mkdir -p $@

@@ -42,6 +42,8 @@ static void itoa(long unsigned int value, char* result, Base base)
 
 
 //TODO more optimization on this?
+//Due to bug in binutils https://www.sourceware.org/ml/binutils/2015-07/msg00319.html
+//Can't get itoa working with 64 bit
 static char *itoa(long unsigned int num, char *str, Base base)
 {
   long unsigned int value;
