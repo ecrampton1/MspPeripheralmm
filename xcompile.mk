@@ -4,7 +4,8 @@ SHELL := /bin/bash
 # They run on HOST and produce binaries that run on arm cortex a8
 # The user should take care of putting the tools in the path...
 TOOLS_PREFIX := msp430-elf-
-TOOLS_PATH   := $(dir $(shell which $(TOOLS_PREFIX)g++))
+#TOOLS_PATH   := $(dir $(shell which $(TOOLS_PREFIX)g++))
+TOOLS_PATH   := /opt/gcc-msp430-elf-dev-20160217/bin/
 
 # Compiler/linker flags to sepcify CPU
 MMCU := msp430g2553
@@ -23,14 +24,14 @@ LDFLAGS     += -mmcu=$(MMCU) -minrt -Wl,--gc-sections,-Map=$(TARGET).map
 #LDFLAGS     += -Wl,--gc-sections
 
 
-CXX         := $(TOOLS_PREFIX)g++ 
-CC          := $(TOOLS_PREFIX)gcc 
-CPP         := $(TOOLS_PREFIX)cpp 
-ASM         := $(TOOLS_PREFIX)as
-AR          := $(TOOLS_PREFIX)ar
-LD          := $(TOOLS_PREFIX)ld
-STRIP       := $(TOOLS_PREFIX)strip
-SIZE       := $(TOOLS_PREFIX)size
+CXX         := $(TOOLS_PATH)$(TOOLS_PREFIX)g++ 
+CC          := $(TOOLS_PATH)$(TOOLS_PREFIX)gcc 
+CPP         := $(TOOLS_PATH)$(TOOLS_PREFIX)cpp 
+ASM         := $(TOOLS_PATH)$(TOOLS_PREFIX)as
+AR          := $(TOOLS_PATH)$(TOOLS_PREFIX)ar
+LD          := $(TOOLS_PATH)$(TOOLS_PREFIX)ld
+STRIP       := $(TOOLS_PATH)$(TOOLS_PREFIX)strip
+SIZE       := $(TOOLS_PATH)$(TOOLS_PREFIX)size
 
 # Don't bother with the rest if the tools aren't present
 ifneq ($(shell which $(CC)),)

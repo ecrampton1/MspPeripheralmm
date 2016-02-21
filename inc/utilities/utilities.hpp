@@ -41,14 +41,18 @@ static void itoa(long unsigned int value, char* result, Base base)
 #endif
 
 
-//TODO more optimization on this?
-//Due to bug in binutils https://www.sourceware.org/ml/binutils/2015-07/msg00319.html
-//Can't get itoa working with 64 bit
-static char *itoa(long unsigned int num, char *str, Base base)
+//TODO more optimization on this? can make int64_t but it doubles the size of a program.
+static char *itoa(int32_t num, char *str, Base base)
 {
-  long unsigned int value;
+  //long int value;
+  int32_t value;
   char *sp = str;
   char *sp2;
+
+  if(base == Base::BASE_HEX) {
+	  *sp++ = '0';
+	  *sp++ = 'x';
+  }
 
   value = num;
 #if ! (UNSIGNED - 0)

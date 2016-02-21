@@ -2,10 +2,9 @@
 #define _MSP_TIMER_HPP
 #include <stdint.h>
 #include "mcu_timer.hpp"
+#include "msp_periph.hpp"
 #include <msp430.h>
 
-
-#define REG_16(x) *((volatile uint16_t*)x)
 namespace McuPeripheral {
 
 enum class TimerSource : uint16_t

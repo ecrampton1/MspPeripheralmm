@@ -5,11 +5,10 @@
 #include <msp430.h>
 
 extern volatile uint32_t mWatchDogCounter;
-static volatile uint32_t mWatchDogMilliSeconds = 0;
 
 namespace McuPeripheral {
 
-
+using SystemTime = uint32_t;
 
 constexpr uint16_t watchdog_control(McuSpeed m)
 {
@@ -20,6 +19,8 @@ constexpr uint16_t watchdog_interval_us(McuSpeed m)
 {
 	return (m == McuSpeed::SPEED_1MHZ) ? 512 : 8192.0 / ((float)m / 1000000.0);
 }
+
+//static EnableInterrupts _EnableInterrupts;
 
 
 template<McuSpeed M>
@@ -40,18 +41,35 @@ public:
 
 	static void inline disableWatchDog()
 	{
-	         //Diable watchdog timer
+	    //Diable watchdog timer
 		WDTCTL = WDTPW | WDTHOLD;
 	}
 
-	static uint32_t millis()
+	static SystemTime millis()
 	{
 		return (mWatchDogCounter * watchdog_interval_us(M)) / 1000;
 	}
 
-	static uint32_t micros()
+	static SystemTime micros()
 	{
-		return mWatchDogCounter * 512;
+		return mWatchDogCounter * watchdog_interval_us(M);
+	}
+
+	/** @brief Sleeps the specified time in milliseconds
+	 */
+	static void sleepInMs(SystemTime time)
+	{
+		SystemTime current = millis();
+		SystemTime end = current + time;
+
+		//ensure we running
+		if((WDTCTL & WDTHOLD) == 0) {
+			//overflow situation
+			if(end < current) {
+				while(current > 0) { current = millis(); }
+			}
+			while(current < end) { current = millis(); }
+		}
 	}
 
 };

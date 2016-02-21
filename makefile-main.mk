@@ -4,7 +4,7 @@ MSPLOAD:= ./mspload
 
 include xcompile.mk
 
-BINDIR := ./msp_bin
+BINDIR := ./bin
 
 #pass in the app to build
 ifndef APP
@@ -35,7 +35,7 @@ vpath %.c   $(SRCDIRS) ./apps/$(TARGET)
 vpath %.cpp $(SRCDIRS) ./apps/$(TARGET)
 
 
-INCDIRS := ./inc ./inc/libraries $(BUILD_INC)
+INCDIRS := ./inc ./inc/libraries ./inc/utilities $(BUILD_INC)
 INCDIRS += $(SRCDIRS)
 
 
