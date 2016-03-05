@@ -1,23 +1,22 @@
 #include "mcu_config.hpp"
 #include <msp430.h>
-
+#include "utilities/circfifo.hpp"
 
 extern "C" {
 #include <stdlib.h>
 }
 
-
+static const uint8_t test_num1 = 0x20;
+static const int8_t test_num2 = -32;
+static const uint16_t test_num3 = 0x5555;
+static const int16_t test_num4 = -25000;
+static const uint32_t test_num5 = 0x50000;
+static const int32_t test_num6 = -1000000;
+static const uint32_t test_num7 = 0x1234567;
+static const int32_t test_num8 = -12345;
 
 void print_hex()
 {
-	uint8_t test_num1 = 0x20;
-	int8_t test_num2 = -32;
-	uint16_t test_num3 = 0x5555;
-	int16_t test_num4 = -25000;
-	uint32_t test_num5 = 0x50000;
-	int32_t test_num6 = -1000000;
-	uint32_t test_num7 = 0x1234567;
-	int32_t test_num8 = -12345;
 	
 	uart::send("Test 1\n");
 	uart::send(test_num1);
@@ -50,14 +49,6 @@ void print_hex()
 using b = McuPeripheral::Base;
 void print_dec()
 {
-        uint8_t test_num1 = 0x20;
-        int8_t test_num2 = -32;
-        uint16_t test_num3 = 0x5555;
-        int16_t test_num4 = -25000;
-        uint32_t test_num5 = 0x50000;
-        int32_t test_num6 = -1000000;
-        uint32_t test_num7 = 0x1234567;
-        int32_t test_num8 = -12345;
 
         uart::send("Test 1\n");
         uart::send(test_num1, b::BASE_DEC);
@@ -95,16 +86,16 @@ int main()
 	led0::output();
 	led1::output();
 	uart::init();
-	
+
 	uart::send("Starting Uart Test!!!\n");
 	print_hex();
 	print_dec();
 
+	uint8_t data;
 	while(1) {
-		led0::toggle();
-		sys::sleepInMs((McuPeripheral::SystemTime)500);
-		led1::toggle();
-		sys::sleepInMs((McuPeripheral::SystemTime)500);
+		while(uart::readByte(data)) {
+			uart::send(&data, 1);
+		}
 	}
 
 	return 1;

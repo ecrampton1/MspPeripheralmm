@@ -2,24 +2,26 @@
 #define _CIRC_FIFO_HPP
 #include "msp430/msp_sys.hpp"
 
+
 template<class T, int _size, class _lock, class _unlock>
 class FifoBuffer  {
 public:
 
-	bool push(T data){
+	bool push(const T data){
 		if(full()) {
 			return false;
 		}
 
-		/* Place byte at position preceding head. */
+		//Put at the head of the buffer
 		--mHead;
 		mBuffer[mHead] = data;
 
-		/* If byte just went to position 0, wrap next head index around. */
+		//When we reach 0 wrap around the buffer
 		if(0 == mHead)
 			mHead = _size;
 
-		/* If next head index caught up to tail, then buffer is full. */
+		//Lock before checking because this could be accessed in an ISR
+		//Note the template passes in the class with overloaded operator for functor
 		Lock();
 		if(mTail == mHead)
 			mHead = 0;
@@ -33,29 +35,27 @@ public:
 			return false;
 		}
 
-		/* Read byte preceding tail. */
+		//Pop from tail
 		--mTail;
 		return_data = mBuffer[mTail];
 
-		/* Wrap next tail index around if byte was at 0. */
+		// If we were full head==0 then we set head to where tail used to be
+		Lock();
+		if(full())
+			mHead = mTail+1;
+		UnLock();
+
+		//After setting head if full we can safely set the tail to wrap around
 		if(0 == mTail)
 			mTail = _size;
-
-		/* If buffer was full before...it is no longer.
-		Point head to where tail is currently.
-		Disable/enable interrupts for safety. */
-		Lock();  //include a marco specific for msp
-		if(full())
-			mHead = mTail;
-		UnLock();
 
 		return true;
 	}
 
-private:
-
-	_lock Lock;
-	_unlock UnLock;
+	void init() {
+		mHead = _size;
+		mTail = _size;
+	}
 
 	inline bool full() {
 		return (mHead == 0);
@@ -65,12 +65,15 @@ private:
 		return (mTail == mHead);
 	}
 
-	T mBuffer[_size];
-	uint8_t mHead = _size;
-	uint8_t mTail = _size;
+private:
+
+	_lock Lock;
+	_unlock UnLock;
+
+	volatile T mBuffer[_size];
+	volatile uint8_t mHead;
+	volatile uint8_t mTail;
 };
-
-
 
 
 #endif //_CIRC_FIFO_HPP

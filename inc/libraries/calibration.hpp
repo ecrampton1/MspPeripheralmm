@@ -14,9 +14,9 @@ public:
 		smclk_out::select_on();
 		smclk_out::select2_off();
 		smclk_out::output();
-		led0::select_on();
-		led0::select2_off();
-		led0::output();
+		//led0::select_on();
+		//led0::select2_off();
+		//led0::output();
 
 		for(int i = 0; i < 4; i++) {
 			startCapture();

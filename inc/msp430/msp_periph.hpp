@@ -9,19 +9,33 @@
 
 namespace McuPeripheral {
 
-struct DisableInterrupts {
+
+struct DisableAllInterrupts {
 	void operator () (){
 		__dint();
 	}
 };
 
-//static DisableInterrupts _DisableInterrupts;
-
-struct EnableInterrupts {
+struct EnableAllInterrupts {
 	void operator () (){
-		__dint();
+		__eint();
 	}
 };
+
+template<uint8_t _ienable, uint8_t  _iflag>
+struct DisableInterrupt {
+	void operator () (){
+		REG_8(_ienable) &= ~_iflag;
+	}
+};
+
+template<uint8_t _ienable, uint8_t  _iflag>
+struct EnableInterrupt {
+	void operator () (){
+		REG_8(_ienable) |= _iflag;
+	}
+};
+
 
 }
 

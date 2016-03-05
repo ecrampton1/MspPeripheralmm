@@ -87,6 +87,7 @@ static char *itoa(int32_t num, char *str, Base base)
   return str;
 }
 
+#if 0
 void
 ftoa(float f,char *buf,int dplaces)
 {
@@ -123,7 +124,7 @@ ftoa(float f,char *buf,int dplaces)
 
     buf[pos] = '\0'; // null term
 }
-
+#endif
 
 }
 
