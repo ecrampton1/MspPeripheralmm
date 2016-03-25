@@ -18,8 +18,7 @@ namespace McuPeripheral
 enum class UartClockSource : uint8_t {  SMCLK = UCSSEL_2, ACLK = UCSSEL_1 };
 
 
-
-template< class _rxPin, class _txPin, uint8_t _ctl0, uint8_t _ctl1,  uint8_t _br0, uint8_t _br1, uint8_t _mctl, uint8_t _rxbuff, uint8_t _txbuff,  uint8_t _status, uint8_t _ienable, uint8_t _iflag>
+template< class _rxpin, class _txpin, class _irq, uint8_t _ctl0, uint8_t _iflag, uint8_t _txflag,  uint8_t _rxflag>
 class UartControl
 {
 public:
@@ -27,16 +26,16 @@ public:
 	static const void loadTxReg(const uint8_t data)
 	{
 		//Ensure we are ready
-		while (!(REG_8(_iflag) & UCA0TXIFG));
-		REG_8(_txbuff) = data;
-		while (!(REG_8(_iflag) & UCA0TXIFG));
+		while (!(REG_8(_iflag) & _txflag));
+		REG_8(txbuf) = data;
+		while (!(REG_8(_iflag) & _txflag));
 	}
 
 	static const bool readRxReg(uint8_t& data)
 	{
 		bool ret = false;
-		if((REG_8(_iflag) & UCA0RXIFG)) {
-			data = REG_8(_rxbuff);
+		if((REG_8(_iflag) & _rxflag)) {
+			data = REG_8(rxbuf);
 			ret = true;
 		}
 		return ret;
@@ -44,33 +43,43 @@ public:
 
 	static void init(const uint8_t baudRate, uint8_t mod, UartClockSource source )
 	{
-		_rxPin::input(); _rxPin::select_on(); _rxPin::select2_on();
-		_txPin::output(); _txPin::select_on(); _txPin::select2_on();
+		_rxpin::input(); _rxpin::select_on(); _rxpin::select2_on();
+		_txpin::output(); _txpin::select_on(); _txpin::select2_on();
 
 
-		REG_8(_ctl1) |= UCSWRST;
-		REG_8(_ienable) &= ~(UCA0TXIE | UCA0TXIE);
-		REG_8(_ctl0) |= UCMODE_0;
-		REG_8(_br0) = baudRate;
-		REG_8(_mctl) = mod;
-		REG_8(_ctl1) |= static_cast<uint8_t>(source);
-		REG_8(_ctl1) &= ~UCSWRST;
-		mRxBuffer.init();
-		mTxBuffer.init();
+		REG_8(ctl1) |= UCSWRST;
+		REG_8(ctl0) |= UCMODE_0;
+		REG_8(br0) = baudRate;
+		REG_8(mctl) = mod;
+		REG_8(ctl1) |= static_cast<uint8_t>(source);
+		REG_8(ctl1) &= ~UCSWRST;
+		_irq::init();
+		_irq::mRxBuffer.init();
+		_irq::mTxBuffer.init();
+		_irq::enableRxInterrupt();
 	}
 
-	static FifoBuffer<uint8_t, 8, McuPeripheral::DisableInterrupt<_ienable,UCA0TXIE>, EnableInterrupt<_ienable,UCA0TXIE> > mTxBuffer;
-	static FifoBuffer<uint8_t, 8, McuPeripheral::DisableInterrupt<_ienable,UCA0RXIE>, EnableInterrupt<_ienable,UCA0RXIE> > mRxBuffer;
 
-	static DisableInterrupt<_ienable,UCA0TXIE> disableTxInterrupt;
-	static DisableInterrupt<_ienable,UCA0RXIE> disableRxInterrupt;
-	static EnableInterrupt<_ienable,UCA0TXIE> enableTxInterrupt;
-	static EnableInterrupt<_ienable,UCA0RXIE> enableRxInterrupt;
+#if 0
+	static FifoBuffer<uint8_t, 8, McuPeripheral::DisableInterrupt<_ienable,_txen>, EnableInterrupt<_ienable,_txen> > mTxBuffer;
+	static FifoBuffer<uint8_t, 8, McuPeripheral::DisableInterrupt<_ienable,_rxen>, EnableInterrupt<_ienable,_rxen> > mRxBuffer;
+
+	static DisableInterrupt<_ienable,_txen> disableTxInterrupt;
+	static DisableInterrupt<_ienable,_rxen> disableRxInterrupt;
+	static EnableInterrupt<_ienable,_txen> enableTxInterrupt;
+	static EnableInterrupt<_ienable,_rxen> enableRxInterrupt;
+#endif
 
 private:
 
-	static __attribute__((__interrupt__)) void Uart_Rx(void);
-	static __attribute__((__interrupt__)) void Uart_Tx(void);
+	static constexpr uint8_t ctl0 = _ctl0;
+	static constexpr uint8_t ctl1 = ctl0 + 1;
+	static constexpr uint8_t br0 = ctl1 +1;
+	static constexpr uint8_t br1 = br0 +1;
+	static constexpr uint8_t mctl = br1 +1;
+	static constexpr uint8_t stat = mctl +1;
+	static constexpr uint8_t rxbuf = stat +1;
+	static constexpr uint8_t txbuf = rxbuf +1;
 
 };
 
@@ -81,7 +90,7 @@ constexpr uint8_t divide(X x, Y y) { return static_cast<uint32_t>(x) / static_ca
 template<typename X,typename Y>
 constexpr uint8_t mod_calc(X x, Y y) { return (((static_cast<uint32_t>(x) / static_cast<uint32_t>(y)) - divide(x ,  y)) * 8) << 1; }
 
-template<class _uart, BaudRate _rate, Speed _clock, bool _enableInt=false >
+template<class _uart, BaudRate _rate, Speed _clock >
 class McuUart : Uart
 {
 public:
@@ -92,9 +101,6 @@ public:
 
 	static void init() {
 			_uart::init(BAUDREGISTER, MODVALUE, CLOCKSOURCE);
-			if(_enableInt) {
-				_uart::enableRxInterrupt();
-			}
 	}
 
 	template<class T>
@@ -128,13 +134,13 @@ public:
 
 	static const void queueByte(const uint8_t data)
 	{
-		if(_enableInt) {
-			while(false == _uart::mTxBuffer.push(data));
-			_uart::enableTxInterrupt();
-		}
-		else {
+		//if() {
+			//while(false == _uart::mTxBuffer.push(data));
+			//_uart::enableTxInterrupt();
+		//}
+		//else {
 			_uart::loadTxReg(data);
-		}
+		//}
 	}
 
 	static const void sendLine(const char* data=0)
@@ -146,38 +152,48 @@ public:
 
 	static const bool readByte(uint8_t& data)
 	{
-		if(_enableInt) {
-			return _uart::mRxBuffer.pop(data);
-		}
-		else {
+		//if(_enableInt) {
+			//return _uart::mRxBuffer.pop(data);
+		//}
+		//else {
 			return _uart::readRxReg(data);
-		}
+		//}
 	}
 
 private:
 
 };
 
+#if 0
+template< class _rxpin, class _txpin, uint8_t _ctl0, uint8_t _ienable, uint8_t _iflag, uint8_t _txflag, uint8_t _rxflag, uint8_t _txen, uint8_t _rxen>
+FifoBuffer<uint8_t, 8, McuPeripheral::DisableInterrupt<_ienable,_txen>, EnableInterrupt<_ienable,_txen> > UartControl<_rxpin, _txpin,  _ctl0, _ienable, _iflag, _txflag, _rxflag, _txen, _rxen>::mTxBuffer;
+template< class _rxpin, class _txpin, uint8_t _ctl0, uint8_t _ienable, uint8_t _iflag, uint8_t _txflag, uint8_t _rxflag, uint8_t _txen, uint8_t _rxen>
+FifoBuffer<uint8_t, 8, McuPeripheral::DisableInterrupt<_ienable,_rxen>, EnableInterrupt<_ienable,_rxen> > UartControl<_rxpin, _txpin,  _ctl0, _ienable, _iflag, _txflag, _rxflag, _txen, _rxen>::mRxBuffer;
 
-template< class _rxPin, class _txPin, uint8_t _ctl0, uint8_t _ctl1,  uint8_t _br0, uint8_t _br1, uint8_t _mctl, uint8_t _rxbuff, uint8_t _txbuff,  uint8_t _status, uint8_t _ienable, uint8_t _iflag>
-FifoBuffer<uint8_t, 8, McuPeripheral::DisableInterrupt<_ienable,UCA0TXIE>, EnableInterrupt<_ienable,UCA0TXIE> > UartControl<_rxPin, _txPin,  _ctl0, _ctl1,   _br0, _br1, _mctl, _rxbuff, _txbuff,  _status, _ienable, _iflag>::mTxBuffer;
-template< class _rxPin, class _txPin, uint8_t _ctl0, uint8_t _ctl1,  uint8_t _br0, uint8_t _br1, uint8_t _mctl, uint8_t _rxbuff, uint8_t _txbuff,  uint8_t _status, uint8_t _ienable, uint8_t _iflag>
-FifoBuffer<uint8_t, 8, McuPeripheral::DisableInterrupt<_ienable,UCA0RXIE>, EnableInterrupt<_ienable,UCA0RXIE> > UartControl<_rxPin, _txPin,  _ctl0, _ctl1,   _br0, _br1, _mctl, _rxbuff, _txbuff,  _status, _ienable, _iflag>::mRxBuffer;
-
-template< class _rxPin, class _txPin, uint8_t _ctl0, uint8_t _ctl1,  uint8_t _br0, uint8_t _br1, uint8_t _mctl, uint8_t _rxbuff, uint8_t _txbuff,  uint8_t _status, uint8_t _ienable, uint8_t _iflag>
-DisableInterrupt<_ienable,UCA0TXIE> UartControl<_rxPin, _txPin,  _ctl0, _ctl1,   _br0, _br1, _mctl, _rxbuff, _txbuff,  _status, _ienable, _iflag>::disableTxInterrupt;
-template< class _rxPin, class _txPin, uint8_t _ctl0, uint8_t _ctl1,  uint8_t _br0, uint8_t _br1, uint8_t _mctl, uint8_t _rxbuff, uint8_t _txbuff,  uint8_t _status, uint8_t _ienable, uint8_t _iflag>
-DisableInterrupt<_ienable,UCA0RXIE> UartControl<_rxPin, _txPin,  _ctl0, _ctl1,   _br0, _br1, _mctl, _rxbuff, _txbuff,  _status, _ienable, _iflag>::disableRxInterrupt;
-template< class _rxPin, class _txPin, uint8_t _ctl0, uint8_t _ctl1,  uint8_t _br0, uint8_t _br1, uint8_t _mctl, uint8_t _rxbuff, uint8_t _txbuff,  uint8_t _status, uint8_t _ienable, uint8_t _iflag>
-EnableInterrupt<_ienable,UCA0TXIE> UartControl<_rxPin, _txPin,  _ctl0, _ctl1,   _br0, _br1, _mctl, _rxbuff, _txbuff,  _status, _ienable, _iflag>::enableTxInterrupt;
-template< class _rxPin, class _txPin, uint8_t _ctl0, uint8_t _ctl1,  uint8_t _br0, uint8_t _br1, uint8_t _mctl, uint8_t _rxbuff, uint8_t _txbuff,  uint8_t _status, uint8_t _ienable, uint8_t _iflag>
-EnableInterrupt<_ienable,UCA0RXIE> UartControl<_rxPin, _txPin,  _ctl0, _ctl1,   _br0, _br1, _mctl, _rxbuff, _txbuff,  _status, _ienable, _iflag>::enableRxInterrupt;
-
+template< class _rxpin, class _txpin, uint8_t _ctl0, uint8_t _ienable, uint8_t _iflag, uint8_t _txflag, uint8_t _rxflag, uint8_t _txen, uint8_t _rxen>
+DisableInterrupt<_ienable,_txen> UartControl<_rxpin, _txpin,  _ctl0, _ienable, _iflag, _txflag, _rxflag, _txen, _rxen>::disableTxInterrupt;
+template< class _rxpin, class _txpin, uint8_t _ctl0, uint8_t _ienable, uint8_t _iflag, uint8_t _txflag, uint8_t _rxflag, uint8_t _txen, uint8_t _rxen>
+DisableInterrupt<_ienable,_rxen> UartControl<_rxpin, _txpin,  _ctl0, _ienable, _iflag, _txflag, _rxflag, _txen, _rxen>::disableRxInterrupt;
+template< class _rxpin, class _txpin, uint8_t _ctl0, uint8_t _ienable, uint8_t _iflag, uint8_t _txflag, uint8_t _rxflag, uint8_t _txen, uint8_t _rxen>
+EnableInterrupt<_ienable,_txen>  UartControl<_rxpin, _txpin,  _ctl0, _ienable, _iflag, _txflag, _rxflag, _txen, _rxen>::enableTxInterrupt;
+template< class _rxpin, class _txpin, uint8_t _ctl0, uint8_t _ienable, uint8_t _iflag, uint8_t _txflag, uint8_t _rxflag, uint8_t _txen, uint8_t _rxen>
+EnableInterrupt<_ienable,_rxen>  UartControl<_rxpin, _txpin,  _ctl0, _ienable, _iflag, _txflag, _rxflag, _txen, _rxen>::enableRxInterrupt;
+#endif
 }
 
 
 using rx =  McuPeripheral::McuPin<McuPort1,BIT1>;
 using tx =  McuPeripheral::McuPin<McuPort1,BIT2>;
-using UartA0 = McuPeripheral::UartControl<rx, tx, UCA0CTL0_, UCA0CTL1_, UCA0BR0_, UCA0BR1_, UCA0MCTL_, UCA0RXBUF_, UCA0TXBUF_, UCA0STAT_, IE2_, IFG2_>;
+
+//I hate to have to add this macro, but no other way could easily set this from config file
+//and have the interrupt vector know.
+//DEFAULT is interrupts off!
+#ifdef UARTA0_ENABLE_INT
+using UartA0_Irq = McuPeripheral::Interrupts<IE2_,UCA0TXIE, UCA0RXIE>;
+#else
+using UartA0_Irq = McuPeripheral::FakeInterupts;
+#endif
+
+using UartA0 = McuPeripheral::UartControl<rx, tx, UartA0_Irq, UCA0CTL0_, IFG2_, UCA0TXIFG, UCA0RXIFG >;
 
 #endif //_MSP_UART_HPP

@@ -15,7 +15,7 @@ int main()
 	led1::output();
 	button::input();
 	uart::init();
-	uart::send("Hello world!\n");
+	uart::send("Start Gpio Test\n");
 
 
 	while(1) {

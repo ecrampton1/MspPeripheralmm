@@ -25,7 +25,7 @@ int main()
 	//led0::output();
 	//led1::output();
 	uart::init();
-	uart::send("Hello world!\n");
+	uart::send("Start Timer Test\n");
 
 	mcuTimer0::stop();
 	mcuTimer0::set_callback(&periodicPrint,0);

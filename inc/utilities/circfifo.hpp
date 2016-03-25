@@ -75,5 +75,33 @@ private:
 	volatile uint8_t mTail;
 };
 
+class FakeFifoBuffer  {
+public:
+
+	template<class T>
+	bool push(T data){
+		return false;
+	}
+
+	template<class T>
+	bool pop (T& return_data){
+		return false;
+	}
+
+	void init() {
+		//do nothing
+	}
+
+	inline bool full() {
+		//do nothing
+		return true;
+	}
+
+	inline bool empty() {
+		//do nothing
+		return true;
+	}
+
+};
 
 #endif //_CIRC_FIFO_HPP

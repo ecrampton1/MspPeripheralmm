@@ -41,6 +41,7 @@ INCDIRS += $(SRCDIRS)
 
 #FLAGS   += -g -O0 -Wall                                         
 FLAGS   += $(addprefix -I, $(INCDIRS))
+FLAGS  += $(APP_FLAGS)
 CXXFLAGS += -fmessage-length=0 $(FLAGS)
 CFLAGS   += --std=gnu11 $(FLAGS)
 

@@ -19,7 +19,7 @@ int main()
 
 	sys::disableWatchDog();
 	//uart::init();
-	//uart::send("Starting DCO calibration!\n");
+	uart::send("Start Calibration\n");
 	//led1::output();
 	__delay_cycles(100000);
 	Calibration::start();

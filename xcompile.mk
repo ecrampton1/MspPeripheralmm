@@ -9,7 +9,7 @@ TOOLS_PATH   := /opt/gcc-msp430-elf-dev-20160217/bin/
 
 # Compiler/linker flags to sepcify CPU
 MMCU := msp430g2553
-CPU_FLAGS   := -mmcu=$(MMCU) -Os -Wall -minrt -pedantic -Wreturn-type -Wunused -s -fdata-sections -ffunction-sections -g3 -fwrapv -fomit-frame-pointer -fno-exceptions 
+CPU_FLAGS   := -mmcu=$(MMCU) -Os -Wall -minrt -pedantic -Wreturn-type -Wunused -s -fdata-sections -ffunction-sections -fwrapv -fomit-frame-pointer -fno-exceptions 
 #CPU_FLAGS   := -mmcu=$(MMCU) -Wall -minrt -pedantic -Wreturn-type -Wunused -g -MMD -fwrapv -fomit-frame-pointer -fno-exceptions
 
 
