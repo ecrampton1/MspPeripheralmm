@@ -51,43 +51,46 @@ struct FakeEnableInterrupt {
 };
 
 
-template<uint8_t _ienable,uint8_t _txen, uint8_t _rxen>
+template<uint8_t _ienable,uint8_t _txen, uint8_t _rxen, bool _isinterrupt = true>
 class Interrupts {
 public:
 	static FifoBuffer<uint8_t, 8, McuPeripheral::DisableInterrupt<_ienable,_txen>, EnableInterrupt<_ienable,_txen> > mTxBuffer;
 	static FifoBuffer<uint8_t, 8, McuPeripheral::DisableInterrupt<_ienable,_rxen>, EnableInterrupt<_ienable,_rxen> > mRxBuffer;
 
 	static void init() { REG_8(_ienable) &= ~(_rxen | _txen); }
+	static bool isInterrupt() { return _isinterrupt; }
+
 	static DisableInterrupt<_ienable,_txen> disableTxInterrupt;
 	static DisableInterrupt<_ienable,_rxen> disableRxInterrupt;
 	static EnableInterrupt<_ienable,_txen> enableTxInterrupt;
 	static EnableInterrupt<_ienable,_rxen> enableRxInterrupt;
 };
 
-template<uint8_t _ienable,uint8_t _txen, uint8_t _rxen>
-FifoBuffer<uint8_t, 8, McuPeripheral::DisableInterrupt<_ienable,_txen>, EnableInterrupt<_ienable,_txen> > Interrupts<_ienable,_txen,_rxen>::mTxBuffer;
+template<uint8_t _ienable,uint8_t _txen, uint8_t _rxen, bool _isinterrupt>
+FifoBuffer<uint8_t, 8, McuPeripheral::DisableInterrupt<_ienable,_txen>, EnableInterrupt<_ienable,_txen> > Interrupts<_ienable,_txen,_rxen, _isinterrupt>::mTxBuffer;
 
-template<uint8_t _ienable,uint8_t _txen, uint8_t _rxen>
-FifoBuffer<uint8_t, 8, McuPeripheral::DisableInterrupt<_ienable,_rxen>, EnableInterrupt<_ienable,_rxen> > Interrupts<_ienable,_txen,_rxen>::mRxBuffer;
+template<uint8_t _ienable,uint8_t _txen, uint8_t _rxen, bool _isinterrupt>
+FifoBuffer<uint8_t, 8, McuPeripheral::DisableInterrupt<_ienable,_rxen>, EnableInterrupt<_ienable,_rxen> > Interrupts<_ienable,_txen,_rxen, _isinterrupt>::mRxBuffer;
 
-template<uint8_t _ienable,uint8_t _txen, uint8_t _rxen>
-DisableInterrupt<_ienable,_txen> Interrupts<_ienable,_txen,_rxen>::disableTxInterrupt;
+template<uint8_t _ienable,uint8_t _txen, uint8_t _rxen, bool _isinterrupt>
+DisableInterrupt<_ienable,_txen> Interrupts<_ienable,_txen,_rxen, _isinterrupt>::disableTxInterrupt;
 
-template<uint8_t _ienable,uint8_t _txen, uint8_t _rxen>
-DisableInterrupt<_ienable,_rxen> Interrupts<_ienable,_txen,_rxen>::disableRxInterrupt;
+template<uint8_t _ienable,uint8_t _txen, uint8_t _rxen, bool _isinterrupt>
+DisableInterrupt<_ienable,_rxen> Interrupts<_ienable,_txen,_rxen, _isinterrupt>::disableRxInterrupt;
 
-template<uint8_t _ienable,uint8_t _txen, uint8_t _rxen>
-EnableInterrupt<_ienable,_txen> Interrupts<_ienable,_txen,_rxen>::enableTxInterrupt;
+template<uint8_t _ienable,uint8_t _txen, uint8_t _rxen, bool _isinterrupt>
+EnableInterrupt<_ienable,_txen> Interrupts<_ienable,_txen,_rxen, _isinterrupt>::enableTxInterrupt;
 
-template<uint8_t _ienable,uint8_t _txen, uint8_t _rxen>
-EnableInterrupt<_ienable,_rxen> Interrupts<_ienable,_txen,_rxen>::enableRxInterrupt;
+template<uint8_t _ienable,uint8_t _txen, uint8_t _rxen, bool _isinterrupt>
+EnableInterrupt<_ienable,_rxen> Interrupts<_ienable,_txen,_rxen, _isinterrupt>::enableRxInterrupt;
 
-
+template<bool _isinterrupt = false>
 class FakeInterupts {
 public:
 	static FakeFifoBuffer mTxBuffer;
 	static FakeFifoBuffer mRxBuffer;
 	static void init() { return; }
+	static bool isInterrupt() { return _isinterrupt; }
 
 	static FakeDisableInterrupt disableTxInterrupt;
 	static FakeDisableInterrupt disableRxInterrupt;

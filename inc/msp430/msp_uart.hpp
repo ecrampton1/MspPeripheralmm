@@ -11,7 +11,6 @@
 #include <math.h>
 #include "msp430/msp_periph.hpp"
 
-
 namespace McuPeripheral
 {
 
@@ -22,6 +21,26 @@ template< class _rxpin, class _txpin, class _irq, uint8_t _ctl0, uint8_t _iflag,
 class UartControl
 {
 public:
+
+	static void queueByte(const uint8_t data)
+	{
+		if(_irq::isInterrupt()) {
+			while(false == _irq::mTxBuffer.push(data));
+			_irq::enableTxInterrupt();
+		}
+		else {
+			loadTxReg(data);
+		}
+	}
+
+	static bool readByte(uint8_t& data)
+	{
+		if(_irq::isInterrupt()) {
+			return _irq::mRxBuffer.pop(data);
+		}
+		return readRxReg(data);
+	}
+
 
 	static const void loadTxReg(const uint8_t data)
 	{
@@ -58,17 +77,6 @@ public:
 		_irq::mTxBuffer.init();
 		_irq::enableRxInterrupt();
 	}
-
-
-#if 0
-	static FifoBuffer<uint8_t, 8, McuPeripheral::DisableInterrupt<_ienable,_txen>, EnableInterrupt<_ienable,_txen> > mTxBuffer;
-	static FifoBuffer<uint8_t, 8, McuPeripheral::DisableInterrupt<_ienable,_rxen>, EnableInterrupt<_ienable,_rxen> > mRxBuffer;
-
-	static DisableInterrupt<_ienable,_txen> disableTxInterrupt;
-	static DisableInterrupt<_ienable,_rxen> disableRxInterrupt;
-	static EnableInterrupt<_ienable,_txen> enableTxInterrupt;
-	static EnableInterrupt<_ienable,_rxen> enableRxInterrupt;
-#endif
 
 private:
 
@@ -120,7 +128,7 @@ public:
 	static const void send(uint8_t* const data,const  int numOfBytes)
 	{
 		for(int i = 0; i < numOfBytes; ++i) {
-			queueByte(data[i]);
+			_uart::queueByte(data[i]);
 		}
 	}
 
@@ -128,19 +136,8 @@ public:
 	{
 		int i = 0;
 		while(data[i] != 0) {
-			queueByte(data[i++]);
+			_uart::queueByte(data[i++]);
 		}
-	}
-
-	static const void queueByte(const uint8_t data)
-	{
-		//if() {
-			//while(false == _uart::mTxBuffer.push(data));
-			//_uart::enableTxInterrupt();
-		//}
-		//else {
-			_uart::loadTxReg(data);
-		//}
 	}
 
 	static const void sendLine(const char* data=0)
@@ -152,33 +149,13 @@ public:
 
 	static const bool readByte(uint8_t& data)
 	{
-		//if(_enableInt) {
-			//return _uart::mRxBuffer.pop(data);
-		//}
-		//else {
-			return _uart::readRxReg(data);
-		//}
+			return _uart::readByte(data);
 	}
 
 private:
 
 };
 
-#if 0
-template< class _rxpin, class _txpin, uint8_t _ctl0, uint8_t _ienable, uint8_t _iflag, uint8_t _txflag, uint8_t _rxflag, uint8_t _txen, uint8_t _rxen>
-FifoBuffer<uint8_t, 8, McuPeripheral::DisableInterrupt<_ienable,_txen>, EnableInterrupt<_ienable,_txen> > UartControl<_rxpin, _txpin,  _ctl0, _ienable, _iflag, _txflag, _rxflag, _txen, _rxen>::mTxBuffer;
-template< class _rxpin, class _txpin, uint8_t _ctl0, uint8_t _ienable, uint8_t _iflag, uint8_t _txflag, uint8_t _rxflag, uint8_t _txen, uint8_t _rxen>
-FifoBuffer<uint8_t, 8, McuPeripheral::DisableInterrupt<_ienable,_rxen>, EnableInterrupt<_ienable,_rxen> > UartControl<_rxpin, _txpin,  _ctl0, _ienable, _iflag, _txflag, _rxflag, _txen, _rxen>::mRxBuffer;
-
-template< class _rxpin, class _txpin, uint8_t _ctl0, uint8_t _ienable, uint8_t _iflag, uint8_t _txflag, uint8_t _rxflag, uint8_t _txen, uint8_t _rxen>
-DisableInterrupt<_ienable,_txen> UartControl<_rxpin, _txpin,  _ctl0, _ienable, _iflag, _txflag, _rxflag, _txen, _rxen>::disableTxInterrupt;
-template< class _rxpin, class _txpin, uint8_t _ctl0, uint8_t _ienable, uint8_t _iflag, uint8_t _txflag, uint8_t _rxflag, uint8_t _txen, uint8_t _rxen>
-DisableInterrupt<_ienable,_rxen> UartControl<_rxpin, _txpin,  _ctl0, _ienable, _iflag, _txflag, _rxflag, _txen, _rxen>::disableRxInterrupt;
-template< class _rxpin, class _txpin, uint8_t _ctl0, uint8_t _ienable, uint8_t _iflag, uint8_t _txflag, uint8_t _rxflag, uint8_t _txen, uint8_t _rxen>
-EnableInterrupt<_ienable,_txen>  UartControl<_rxpin, _txpin,  _ctl0, _ienable, _iflag, _txflag, _rxflag, _txen, _rxen>::enableTxInterrupt;
-template< class _rxpin, class _txpin, uint8_t _ctl0, uint8_t _ienable, uint8_t _iflag, uint8_t _txflag, uint8_t _rxflag, uint8_t _txen, uint8_t _rxen>
-EnableInterrupt<_ienable,_rxen>  UartControl<_rxpin, _txpin,  _ctl0, _ienable, _iflag, _txflag, _rxflag, _txen, _rxen>::enableRxInterrupt;
-#endif
 }
 
 
@@ -191,7 +168,7 @@ using tx =  McuPeripheral::McuPin<McuPort1,BIT2>;
 #ifdef UARTA0_ENABLE_INT
 using UartA0_Irq = McuPeripheral::Interrupts<IE2_,UCA0TXIE, UCA0RXIE>;
 #else
-using UartA0_Irq = McuPeripheral::FakeInterupts;
+using UartA0_Irq = McuPeripheral::FakeInterupts<false>;
 #endif
 
 using UartA0 = McuPeripheral::UartControl<rx, tx, UartA0_Irq, UCA0CTL0_, IFG2_, UCA0TXIFG, UCA0RXIFG >;

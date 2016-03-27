@@ -74,6 +74,7 @@ int main()
 	while(1) {
 		while(uart::readByte(data)) {
 			uart::send(&data, 1);
+			led0::toggle();
 		}
 	}
 
