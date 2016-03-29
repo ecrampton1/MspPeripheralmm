@@ -10,19 +10,26 @@
 
 namespace McuPeripheral {
 
-
+/**@brief Wrapper to disable all interrupts
+ */
 struct DisableAllInterrupts {
 	void operator () (){
 		__dint();
 	}
 };
 
+/**@brief Wrapper to enable all interrupts
+ */
 struct EnableAllInterrupts {
 	void operator () (){
 		__eint();
 	}
 };
 
+/**@brief Wrapper to disable specifc interrupt or interrupts
+ * tparam _ienable the interrupt register that the _iflag is cleared to disable interrupts
+ * tparam _iflag the flag in the _ienable register to be cleared for disabling interrupt
+ */
 template<uint8_t _ienable, uint8_t  _iflag>
 struct DisableInterrupt {
 	void operator () (){
@@ -30,6 +37,10 @@ struct DisableInterrupt {
 	}
 };
 
+/**@brief Wrapper to enable specifc interrupt or interrupts
+ * tparam _ienable the interrupt register that the _iflag is cleared to enable interrupts
+ * tparam _iflag the flag in the _ienable register to be cleared for enabling interrupt
+ */
 template<uint8_t _ienable, uint8_t  _iflag>
 struct EnableInterrupt {
 	void operator () (){
@@ -37,20 +48,19 @@ struct EnableInterrupt {
 	}
 };
 
-//Should be a base class to inherit from
-struct FakeDisableInterrupt {
+/**@brief Empty class that can be used as a dummy when interrupts are not needed for disabling or enabling
+ */
+struct FakeInterrupt {
 	void operator () (){
 		//Do nothing
 	}
 };
 
-struct FakeEnableInterrupt {
-	void operator () (){
-		//Do nothing
-	}
-};
-
-
+/**@brief Templated class for specifing interrupts used in communications
+ * tparam _ienable the interrupt register that the _iflag is set/cleared for interrupts
+ * tparam _txen tx flag for enabling and disabling interrupts
+ * tparam _rxen rx flag for enabling and disabling interrupts
+ */
 template<uint8_t _ienable,uint8_t _txen, uint8_t _rxen>
 class Interrupts {
 public:
@@ -82,17 +92,19 @@ EnableInterrupt<_ienable,_txen> Interrupts<_ienable,_txen,_rxen>::enableTxInterr
 template<uint8_t _ienable,uint8_t _txen, uint8_t _rxen>
 EnableInterrupt<_ienable,_rxen> Interrupts<_ienable,_txen,_rxen>::enableRxInterrupt;
 
-
+/**@brief dummy class for interrupts that are used when interrupts are not to be enabled.
+ *        this is used for polling functionality of the communication.
+ */
 class FakeInterupts {
 public:
 	static FakeFifoBuffer mTxBuffer;
 	static FakeFifoBuffer mRxBuffer;
 	static void init() { return; }
 
-	static FakeDisableInterrupt disableTxInterrupt;
-	static FakeDisableInterrupt disableRxInterrupt;
-	static FakeEnableInterrupt enableTxInterrupt;
-	static FakeEnableInterrupt enableRxInterrupt;
+	static FakeInterrupt disableTxInterrupt;
+	static FakeInterrupt disableRxInterrupt;
+	static FakeInterrupt enableTxInterrupt;
+	static FakeInterrupt enableRxInterrupt;
 };
 
 }
