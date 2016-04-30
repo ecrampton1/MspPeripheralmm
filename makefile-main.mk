@@ -56,6 +56,8 @@ $(TARGET)_objs   := $(addprefix $($(TARGET)_objdir)/,$(subst .c,.o,$($(TARGET)_s
 
 $(TARGET)_deps := $(subst .o,.d,$($(TARGET)_objs))
 
+$(TARGET)_ldflags := -Wl,-Map=$(TARGET).map
+
 $($(TARGET)_deps) $($(TARGET)_objs) $($(TARGET)_file): | $($(TARGET)_objdir)
 
 
@@ -103,7 +105,7 @@ all_objdirs += $($(TARGET)_objdir) $(BINDIR)
 $(all_objdirs):
 	mkdir -p $@
 
-clean-all: cleanall
+#clean-all: cleanall
 
 include $($(TARGET)_deps) 
 

@@ -40,6 +40,12 @@ static void itoa(long unsigned int value, char* result, Base base)
 }
 #endif
 
+//slow but space saving divide
+static int32_t divide_num(int32_t num, int divisor)
+{
+	if(num < divisor) { return 0; }
+	return divide_num(num-divisor,divisor) + 1;
+}
 
 //TODO more optimization on this? can make int64_t but it doubles the size of a program.
 static char *itoa(int32_t num, char *str, Base base)
@@ -48,25 +54,29 @@ static char *itoa(int32_t num, char *str, Base base)
   int32_t value;
   char *sp = str;
   char *sp2;
+  value = num;
 
   if(base == Base::BASE_HEX) {
 	  *sp++ = '0';
 	  *sp++ = 'x';
   }
-
-  value = num;
-#if ! (UNSIGNED - 0)
-  /* Store sign at start of buffer for negative base-10 values */
-  if (10 == (int)base && 0 > num) {
-    *sp++ = '-';
-    value = -num;
+  else if (base == Base::BASE_BIN) {
+	  *sp++ = '0';
+	  *sp++ = 'b';
   }
-#endif
+  else  {
+	  if (0 > num) {
+		*sp++ = '-';
+		value = -num;
+	  }
+  }
+
   sp2 = sp;
 
   do {
-    char rem = value % (int)base;
-    value /= (int)base;
+    char rem = value % static_cast<int>(base);
+    value = value / static_cast<int>(base);
+    //value = divide_num(value,static_cast<int>(base));
     if (10 > rem) {
       *sp++ = '0' + rem;
     } else {
@@ -86,6 +96,9 @@ static char *itoa(int32_t num, char *str, Base base)
 
   return str;
 }
+
+
+
 
 #if 0
 void

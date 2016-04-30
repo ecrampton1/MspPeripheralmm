@@ -26,7 +26,47 @@ FOR_ALL_SPEEDS( INIT_FUNC )
 #undef INIT_FUNC
 
 
+static void __inline__ brief_pause(register unsigned int n)
+{
+	__asm__ __volatile__ (
+			/* 1 instruction */
+				"1: nop \n"
+			/* 1 instruction */
+				" dec        %[n] \n"
+			/* 2 instructions */
+				" jne        1b \n"
+		: [n] "+r"(n));
+	/* total 4 instructions */
+}
 
+template<>
+void McuSystem<Speed::SPEED_1MHZ>::delayInUs(uint32_t time)
+{
+	//return imediately for 1/2us delay
+	if(time < 3)
+		return;
+
+	brief_pause(time >> 2);
+}
+
+template<>
+void McuSystem<Speed::SPEED_8MHZ>::delayInUs(uint32_t time)
+{
+	//return imediately for 1/2us delay
+	brief_pause(time << 1);
+}
+
+template<>
+void McuSystem<Speed::SPEED_12MHZ>::delayInUs(uint32_t time)
+{
+	brief_pause(time << 1 + time);
+}
+
+template<>
+void McuSystem<Speed::SPEED_16MHZ>::delayInUs(uint32_t time)
+{
+	brief_pause(time << 2);
+}
 
 }
 

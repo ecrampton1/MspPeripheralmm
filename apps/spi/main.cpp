@@ -1,6 +1,6 @@
 #include "mcu_config.hpp"
 #include <msp430.h>
-#include "nRF24L01.h"
+#include "nrf24/nRF24L01.h"
 
 extern "C" {
 #include <stdlib.h>

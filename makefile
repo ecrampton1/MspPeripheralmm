@@ -11,7 +11,7 @@ $(TARGETS):
 	echo $@
 	+make -f makefile-main.mk APP=$@	
 
-.PHONY: clean install $(addsuffix _clean,$(DIRS))
+.PHONY: clean install )
 
 clean: $(addsuffix -clean,$(TARGETS))
 $(addsuffix -clean,$(TARGETS)):

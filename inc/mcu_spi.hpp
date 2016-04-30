@@ -26,14 +26,5 @@ enum class SpiBitOrder : uint8_t
 	SPI_MSB = UCMSB
 };
 
-class Spi
-{
-public:
-	static const void init();
-	template<typename T>
-	static const void send(T data);
-
-};
-
 }
 #endif //_MCU_UART_HPP

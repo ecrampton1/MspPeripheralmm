@@ -1,6 +1,5 @@
 #ifndef _MSP_GPIO_HPP
 #define _MSP_GPIO_HPP
-#include "mcu_gpio.hpp"
 #include <stdint.h>
 #include <msp430.h>
 
@@ -8,7 +7,7 @@ namespace McuPeripheral {
 
 template<uint8_t _input, uint8_t _output, uint8_t _direction,
 uint8_t _resistor, uint8_t _select, uint8_t _select2>
-class McuPort : public Port
+class McuPort 
 {
 public:
 	static const uint8_t mInputReg = _input;
@@ -22,7 +21,7 @@ public:
 
 
 template < class _port, uint8_t _pin >
-class McuPin : public Pin<_port,_pin>
+class McuPin 
 {
 public:
 
@@ -32,7 +31,7 @@ public:
 	}
 	static bool read()
 	{
-		return *((volatile uint8_t*)_port::mOutputReg) & _pin;
+		return *((volatile uint8_t*)_port::mInputReg) & _pin;
 	}
 	static void clear()
 	{
@@ -79,6 +78,66 @@ public:
 	static void select2_on()
 	{
 		*((volatile uint8_t*)_port::mSelect2Reg) |= _pin;
+	}
+};
+
+
+
+class FakePin
+{
+public:
+
+	static void set()
+	{
+		return;
+	}
+	static bool read()
+	{
+		return true;
+	}
+	static void clear()
+	{
+		return;
+	}
+	static void toggle()
+	{
+		return;
+	}
+	static void output()
+	{
+		return;
+	}
+	static void input()
+	{
+		return;
+	}
+	static void pull_up()
+	{
+		return;
+	}
+	static void pull_down()
+	{
+		return;
+	}
+	static void pull_off()
+	{
+		return;
+	}
+	static void select_off()
+	{
+		return;
+	}
+	static void select2_off()
+	{
+		return;
+	}
+	static void select_on()
+	{
+		return;
+	}
+	static void select2_on()
+	{
+		return;
 	}
 };
 

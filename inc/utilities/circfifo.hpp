@@ -35,15 +35,15 @@ public:
 			return false;
 		}
 
-		//Pop from tail
-		--mTail;
-		return_data = mBuffer[mTail];
-
 		// If we were full head==0 then we set head to where tail used to be
 		Lock();
 		if(full())
-			mHead = mTail+1;
+			mHead = mTail;
 		UnLock();
+
+		//Pop from tail
+		--mTail;
+		return_data = mBuffer[mTail];
 
 		//After setting head if full we can safely set the tail to wrap around
 		if(0 == mTail)
@@ -67,8 +67,8 @@ public:
 
 private:
 
-	_lock Lock;
-	_unlock UnLock;
+	static _lock Lock;
+	static _unlock UnLock;
 
 	volatile T mBuffer[_size];
 	volatile uint8_t mHead;
