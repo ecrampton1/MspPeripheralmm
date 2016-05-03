@@ -79,9 +79,9 @@ public:
 
 	static void init(const uint8_t divide, SpiClock clock, SpiMaster master, SpiBitOrder order )
 	{
-		_misopin::input(); _misopin::select_on(); _misopin::select2_on();
-		_simopin::output(); _simopin::select_on(); _simopin::select2_on();
-		_clkpin::output(); _clkpin::select_on(); _clkpin::select2_on();
+		_misopin::input(); _misopin::selectOn(); _misopin::select2On();
+		_simopin::output(); _simopin::selectOn(); _simopin::select2On();
+		_clkpin::output(); _clkpin::selectOn(); _clkpin::select2On();
 
 
 		REG_8(ctl1) |= UCSWRST;

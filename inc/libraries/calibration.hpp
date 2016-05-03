@@ -11,10 +11,10 @@ public:
 	static int start()
 	{
 		//Output the smclk
-		smclk_out::select_on();
-		smclk_out::select2_off();
+		smclk_out::selectOn();
+		smclk_out::select2Off();
 		smclk_out::output();
-		//led0::select_on();
+		//led0::selectOn();
 		//led0::select2_off();
 		//led0::output();
 

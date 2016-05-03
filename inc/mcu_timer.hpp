@@ -1,12 +1,10 @@
 #ifndef _MCU_TIMER_HPP_
 #define _MCU_TIMER_HPP_
-
+#include "mcu_sys.hpp"
 
 namespace McuPeripheral {
 
 //static void dummy(void* args) {}
-
-typedef void (*callback_t) (void*);
 
 template< class t>
 class TimerBase
