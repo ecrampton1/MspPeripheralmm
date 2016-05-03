@@ -1,6 +1,5 @@
 #include "mcu_config.hpp"
 #include <msp430.h>
-#include "nrf24/nRF24L01.h"
 
 extern "C" {
 #include <stdlib.h>
@@ -27,9 +26,9 @@ int main()
 
 	uart::send("1");
 	nrf_csn::clear();
-	spi::send((uint8_t)RF24_SETUP_AW | (uint8_t)RF24_R_REGISTER);
+	spi::send((uint8_t)0x03);
 	uart::send("2");
-	spi::send((uint8_t)RF24_NOP);
+	spi::send((uint8_t)0XFF);
 	uart::send("3");
 	nrf_csn::set();
 

@@ -5,16 +5,18 @@
 
 namespace McuPeripheral {
 
-template<uint8_t _input, uint8_t _output, uint8_t _direction,
-uint8_t _resistor, uint8_t _select, uint8_t _select2>
+template<uint8_t _input, uint8_t _select2>
 class McuPort 
 {
 public:
 	static const uint8_t mInputReg = _input;
-	static const uint8_t mOutputReg = _output;
-	static const uint8_t mDirectionReg = _direction;
-	static const uint8_t mResistorReg = _resistor;
-	static const uint8_t mSelectReg = _select;
+	static const uint8_t mOutputReg = _input+1;
+	static const uint8_t mDirectionReg = _input+2;
+	static const uint8_t mIntFlagReg = _input+3;
+	static const uint8_t mIntEdgeSelReg = _input+4;
+	static const uint8_t mIntEnableReg = _input+5;
+	static const uint8_t mSelectReg = _input+6;
+	static const uint8_t mResistorReg = _input+7;
 	static const uint8_t mSelect2Reg = _select2;
 };
 
@@ -49,38 +51,71 @@ public:
 	{
 		*((volatile uint8_t*)_port::mDirectionReg) &= ~_pin;
 	}
-	static void pull_up()
+	static void pullUp()
 	{
 		*((volatile uint8_t*)_port::mResistor) |= _pin;
 		set();
 	}
-	static void pull_down()
+	static void pullDown()
 	{
 		*((volatile uint8_t*)_port::mResistor) |= _pin;
 		clear();
 	}
-	static void pull_off()
+	static void pullOff()
 	{
 		*((volatile uint8_t*)_port::mResistor) &= ~_pin;
 	}
-	static void select_off()
+	static void intEnable()
+	{
+		*((volatile uint8_t*)_port::mIntEnableReg) |= _pin;
+	}
+	static void intDisable()
+	{
+		*((volatile uint8_t*)_port::mIntEnableReg) &= ~_pin;
+	}
+	static void edgeHighToLow()
+	{
+		*((volatile uint8_t*)_port::mIntEdgeSelReg) |= _pin;
+	}
+	static void edgeLowToHigh()
+	{
+		*((volatile uint8_t*)_port::mIntEdgeSelReg) &= ~_pin;
+	}
+	static bool irqFlag()
+	{
+		return *((volatile uint8_t*)_port::mInputReg) & _pin;
+	}
+	static void selectOff()
 	{
 		*((volatile uint8_t*)_port::mSelectReg) &= ~_pin;
 	}
-	static void select2_off()
+	static void select2Off()
 	{
 		*((volatile uint8_t*)_port::mSelect2Reg) &= ~_pin;
 	}
-	static void select_on()
+	static void selectOn()
 	{
 		*((volatile uint8_t*)_port::mSelectReg) |= _pin;
 	}
-	static void select2_on()
+	static void select2On()
 	{
 		*((volatile uint8_t*)_port::mSelect2Reg) |= _pin;
 	}
+	static void setPinIrqHandler(callback_t cb, callback_args_t args)
+	{
+		mPinHandler = cb;
+		mPinArgs = args;
+	}
+
+	static callback_t mPinHandler;
+	static callback_args_t mPinArgs;
+
 };
 
+template < class _port, uint8_t _pin >
+callback_t McuPin<_port,_pin>::mPinHandler;
+template < class _port, uint8_t _pin >
+callback_args_t McuPin<_port,_pin>::mPinArgs;
 
 
 class FakePin
@@ -131,11 +166,11 @@ public:
 	{
 		return;
 	}
-	static void select_on()
+	static void selectOn()
 	{
 		return;
 	}
-	static void select2_on()
+	static void select2On()
 	{
 		return;
 	}
@@ -145,6 +180,6 @@ public:
 
 }
 
-using McuPort1 =  McuPeripheral::McuPort<P1IN_,P1OUT_,P1DIR_,P1REN_,P1SEL_,P1SEL2_>;
-using McuPort2 =  McuPeripheral::McuPort<P2IN_,P2OUT_,P2DIR_,P2REN_,P2SEL_,P2SEL2_>;
+using McuPort1 =  McuPeripheral::McuPort<P1IN_,P1SEL2_>;
+using McuPort2 =  McuPeripheral::McuPort<P2IN_,P2SEL2_>;
 #endif //_MSP_GPIO_HPP

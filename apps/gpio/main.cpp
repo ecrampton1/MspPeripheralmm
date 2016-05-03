@@ -6,6 +6,10 @@ extern "C" {
 #include <stdlib.h>
 }
 
+void pinHandle (void* args)
+{
+	led1::toggle();
+}
 
 int main()
 {
@@ -13,15 +17,17 @@ int main()
 	//sys::enabletWatchDog(); //starts counting for system time
 	led0::output();
 	led1::output();
+	Periph::callback_t cb = pinHandle;
+	button::setPinIrqHandler(cb,(Periph::callback_args_t)0);
 	button::input();
+	button::edgeHighToLow();
+	button::intEnable();
 	uart::init();
 	uart::send("Start Gpio Test\n");
 
 
 	while(1) {
 		led0::toggle();
-		__delay_cycles(5000000);
-		led1::toggle();
 		__delay_cycles(5000000);
 	}
 

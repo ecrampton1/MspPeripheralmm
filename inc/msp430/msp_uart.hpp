@@ -38,7 +38,9 @@ public:
 		if(_irq::isInterrupt()) {
 			return _irq::mRxBuffer.pop(data);
 		}
-		return readRxReg(data);
+		else {
+			return readRxReg(data);
+		}
 	}
 
 
@@ -62,8 +64,8 @@ public:
 
 	static void init(const uint8_t baudRate, uint8_t mod, UartClockSource source )
 	{
-		_rxpin::input(); _rxpin::select_on(); _rxpin::select2_on();
-		_txpin::output(); _txpin::select_on(); _txpin::select2_on();
+		_rxpin::input(); _rxpin::selectOn(); _rxpin::select2On();
+		_txpin::output(); _txpin::selectOn(); _txpin::select2On();
 
 
 		REG_8(ctl1) |= UCSWRST;
