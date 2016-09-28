@@ -100,7 +100,7 @@ public:
 	static FakeFifoBuffer mTxBuffer;
 	static FakeFifoBuffer mRxBuffer;
 	static void init() { return; }
-	static bool isInterrupt() { return _isinterrupt; }
+	static bool isInterrupt()  { return _isinterrupt; }
 
 	static FakeInterrupt disableTxInterrupt;
 	static FakeInterrupt disableRxInterrupt;
