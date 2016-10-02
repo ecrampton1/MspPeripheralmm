@@ -9,5 +9,6 @@ mkfile_path := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 #APP_FLAGS := -DUARTA0_ENABLE_INT
 BUILD_SOURCES := $(mkfile_path)/main.cpp
 BUILD_INC := $(mkfile_path)
+BUILD_SOURCE_DIRS := $(mkfile_path)
 OBJ_DIR = $(mkfile_path)/obj
 

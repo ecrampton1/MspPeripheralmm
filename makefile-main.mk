@@ -31,8 +31,8 @@ $(TARGET)_srcs += $(BUILD_SOURCES)
 
 # Set vpaths to find source files.
 # This may become problematic if we ever repeat a source file name anywhere...
-vpath %.c   $(SRCDIRS) ./apps/$(TARGET)
-vpath %.cpp $(SRCDIRS) ./apps/$(TARGET)
+vpath %.c   $(SRCDIRS) $(BUILD_SOURCE_DIRS)
+vpath %.cpp $(SRCDIRS) $(BUILD_SOURCE_DIRS)
 
 
 INCDIRS := ./inc ./inc/libraries ./inc/utilities $(BUILD_INC)
