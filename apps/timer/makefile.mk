@@ -10,4 +10,5 @@ mkfile_path := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 BUILD_SOURCES := $(mkfile_path)/main.cpp
 BUILD_INC := $(mkfile_path)
 OBJ_DIR = $(mkfile_path)/obj
+BUILD_SOURCE_DIRS := $(mkfile_path)
 
