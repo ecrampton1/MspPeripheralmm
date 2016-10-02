@@ -101,7 +101,7 @@ template<typename X,typename Y>
 constexpr uint8_t mod_calc(X x, Y y) { return (((static_cast<uint32_t>(x) / static_cast<uint32_t>(y)) - divide(x ,  y)) * 8) << 1; }
 
 template<class _uart, BaudRate _rate, Speed _clock >
-class McuUart : Uart
+class McuUart
 {
 public:
 

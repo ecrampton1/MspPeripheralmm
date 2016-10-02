@@ -4,8 +4,7 @@
 
 namespace McuPeripheral {
 
-typedef void (*callback_t) (void*);
-using callback_args_t = void*;
+
 
 enum class McuSpeed : uint32_t { SPEED_1MHZ = 1000000, SPEED_8MHZ= 8000000, SPEED_12MHZ= 12000000, SPEED_16MHZ=16000000 };
 
@@ -18,11 +17,6 @@ enum class McuSpeed : uint32_t { SPEED_1MHZ = 1000000, SPEED_8MHZ= 8000000, SPEE
 class SystemBase
 {
 public:
-
-	static void init();
-	static void enable_irq();
-	static void disable_irq();
-	static uint32_t getSpeed();
 
 protected:
 	static uint32_t mSpeed;
