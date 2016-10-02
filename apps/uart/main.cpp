@@ -70,6 +70,8 @@ int main()
 	print_hex();
 	print_dec();
 
+	PRINT("Number 8 ", (int) 8, " Number 16 ", (int) 16, ENDL)
+
 	uint8_t data;
 	while(1) {
 		while(uart::readByte(data)) {

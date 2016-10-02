@@ -93,6 +93,39 @@ private:
 
 };
 
+//This macro is returning the number of arguments based on the placeholder N
+//example is _VA_ARGS__ is 3 arguments that takes up _1,_2_3, then _4 through _8
+//are taken up by 8-4 in the arguments returning 3.
+#define VA_NARGS_IMPL(_1,_2,_3,_4,_5,_6,_7,_8,N,...) N
+#define VA_NARGS(...) VA_NARGS_IMPL(__VA_ARGS__, 8, 7, 6, 5, 4, 3, 2, 1)
+
+
+#define VARARG_IMPL2(base, count, ...) base##count(__VA_ARGS__)
+#define VARARG_IMPL(base, count, ...) VARARG_IMPL2(base, count, __VA_ARGS__)
+#define VARARG(base, ...) VARARG_IMPL(base, VA_NARGS(__VA_ARGS__), __VA_ARGS__)
+
+
+#define PRINT(...) VARARG(Print,__VA_ARGS__)
+
+
+#define Print1(_1) \
+    uart::send(_1);
+#define Print2(_1,_2) \
+		Print1(_1) Print1(_2)
+#define Print3(_1,_2,_3) \
+		Print1(_1) Print2(_2,_3)
+#define Print4(_1,_2,_3,_4) \
+		Print1(_1) Print3(_2,_3,_4)
+#define Print5(_1,_2,_3,_4,_5) \
+		Print1(_1) Print4(_2,_3,_4,_5)
+#define Print6(_1,_2,_3,_4,_5,_6) \
+		Print1(_1) Print5(_2,_3,_4,_5,_6)
+#define Print7(_1,_2,_3,_4,_5,_6,_7) \
+		Print1(_1) Print6(_2,_3,_4,_5,_6,_7)
+#define Print8(_1,_2,_3,_4,_5,_6,_7,_8) \
+		Print1(_1) Print7(_2,_3,_4,_5,_6,_7,_8)
+
+#define ENDL "\n"
 
 template<typename X,typename Y>
 constexpr uint8_t divide(X x, Y y) { return static_cast<uint32_t>(x) / static_cast<uint32_t>(y);  }
