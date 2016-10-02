@@ -2,6 +2,7 @@
 #define _MSP_GPIO_HPP
 #include <stdint.h>
 #include <msp430.h>
+#include "utilities/utilities.hpp"
 
 namespace McuPeripheral {
 

@@ -4,6 +4,10 @@
 
 namespace McuPeripheral {
 
+
+typedef void (*callback_t) (void*);
+using callback_args_t = void*;
+
 enum class Base : int
 {
 	BASE_BIN = 2,
