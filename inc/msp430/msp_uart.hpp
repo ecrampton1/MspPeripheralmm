@@ -104,9 +104,9 @@ private:
 #define VARARG_IMPL(base, count, ...) VARARG_IMPL2(base, count, __VA_ARGS__)
 #define VARARG(base, ...) VARARG_IMPL(base, VA_NARGS(__VA_ARGS__), __VA_ARGS__)
 
-
+#ifndef PRINT
 #define PRINT(...) VARARG(Print,__VA_ARGS__)
-
+#endif
 
 #define Print1(_1) \
     uart::send(_1);
@@ -149,7 +149,7 @@ public:
 	template<class T>
 	static const void send( const T data, const Base base=Base::BASE_HEX )
 	{
-		static char buf[sizeof(T)*3 +1];
+		static char buf[sizeof(T)*4+1];
 		itoa(data,buf, base);
 		send(static_cast<const char*>(buf));
 	}
