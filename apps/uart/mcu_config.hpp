@@ -14,6 +14,9 @@ namespace Periph = McuPeripheral;
 
 constexpr Speed clock_speed = Speed::SPEED_16MHZ;
 
+//Below is an empty PRINT which will compile out any of those statements good for removing debugging prints
+//#define PRINT(...)
+
 using led0 =  Periph::McuPin<McuPort1,BIT0>;
 using led1 =  Periph::McuPin<McuPort1,BIT6>;
 using button = Periph::McuPin<McuPort1,BIT3>;

@@ -181,6 +181,12 @@ public:
 	template<class T>
 	static bool writePayload(T* const buf,const int size, bool noAck=false)
 	{
+		_uart::send("writePayload:");
+		for(int i = 0; i < size; ++i){
+			_uart::send((int)buf[i]);
+			_uart::send(",");
+		}
+		_uart::sendLine();
 		//if radio was listening before re-enable at the end
 		bool rxWasEnabled = disableRx();
 		if(!noAck) { //ack enabled
