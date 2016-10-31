@@ -1,6 +1,6 @@
 #include "mcu_config.hpp"
 #include <msp430.h>
-
+#include <stdint.h>
 
 extern "C" {
 #include <stdlib.h>

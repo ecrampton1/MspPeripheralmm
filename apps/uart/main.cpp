@@ -14,22 +14,12 @@ static const uint32_t test_num5 = 0x1234567;
 
 void print_hex()
 {
-	
-	uart::send("1: ");
-	uart::send(test_num1);
-	uart::sendLine();
-	uart::send("2: ");
-	uart::send(test_num2);
-	uart::sendLine();
-	uart::send("3: ");
-	uart::send(test_num3);
-	uart::sendLine();
-	uart::send("4: ");
-	uart::send(test_num4);
-	uart::sendLine();
-	uart::send("5: ");
-	uart::send(test_num5);
-	uart::sendLine();
+	PRINT("1: ", test_num1, ENDL)
+	PRINT("2: ", test_num2, ENDL)
+	PRINT("3: ", test_num3, ENDL)
+	PRINT("4: ", test_num4, ENDL)
+	PRINT("5: ", test_num5, ENDL)
+
 
 }
 
@@ -65,6 +55,20 @@ int main()
 	led0::output();
 	led1::output();
 	uart::init();
+
+	int8_t* buffer = NULL;
+	buffer = (int8_t*)malloc(20);
+
+	PRINT("Buffer: ", (int)buffer, ENDL)
+
+	if(buffer != NULL) {
+
+		for(int i = 0; i < 20; ++i) {
+			buffer[i] = i;
+			uart::send(buffer[i]);
+		}
+
+	}
 
 	uart::send("Start Uart Test\n");
 	print_hex();
