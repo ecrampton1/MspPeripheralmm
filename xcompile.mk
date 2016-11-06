@@ -18,11 +18,11 @@ CPU_FLAGS   := -mmcu=$(MMCU) -Os -Wall -g -s -minrt -Wno-main -pedantic -Wreturn
 LDSCRIPTS   := $(TOOLS_PATH)../msp430-elf/include/$(MMCU).ld
 #SYSINCLUDE  := $(TOOLS_PATH)/include
 
-CXXFLAGS    := -std=c++11 $(CPU_FLAGS)  
+CXXFLAGS    := -std=c++11 $(CPU_FLAGS) -lstdc++
 CFLAGS      := $(CPU_FLAGS) -lc
 ASFLAGS     := -mmcu=$(MMCU) --x assembler-with-cpp -Wa
 LDFLAGS     := $(addprefix -T ,$(LDSCRIPTS))
-LDFLAGS     += -mmcu=$(MMCU) -minrt -Wl,--gc-sections -lc 
+LDFLAGS     += -mmcu=$(MMCU) -minrt -Wl,--gc-sections  -lstdc++
 #LDFLAGS     += -Wl,--gc-sections
 
 
