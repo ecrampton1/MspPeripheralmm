@@ -181,38 +181,23 @@ public:
 	template<class T>
 	static bool writePayload(T* const buf,const int size, bool noAck=false)
 	{
-		_uart::send("writePayload:");
+		/*_uart::send("w: ");
 		for(int i = 0; i < size; ++i){
 			_uart::send((int)buf[i]);
 			_uart::send(",");
 		}
-		_uart::sendLine();
+		_uart::sendLine();*/
 		//if radio was listening before re-enable at the end
 		bool rxWasEnabled = disableRx();
 		if(!noAck) { //ack enabled
 			openPipeHelper(Nrf24Pipe::RX_PIPE0,mTxPipeAddress);
-			uint8_t ret = nrf_comm::writePayload(buf, size);
+			nrf_comm::writePayload(buf, size);
 		}else {//No ack enabled
-			uint8_t ret = nrf_comm::writeNoTxAck(buf, size);
+			nrf_comm::writeNoTxAck(buf, size);
 		}
 
 		_ce::set();
-		_sys::delayInUs(10);
-		_ce::clear();
-
-		uint32_t currentTime = _sys::millis();
-		uint32_t timeout = currentTime + 100;
-		//IRQ is high
-		while(_irq::read()) {
-			if(timeout < currentTime) {
-				nrf_comm::flushTx();
-				mLastTxPassed = false;
-				return mLastTxPassed;
-			}
-			currentTime = _sys::millis();
-		}
-		printStatus();
-		checkAndClearIrq();
+		waitForTxFifoEmpty();
 
 		if(rxWasEnabled) {
 			openPipeHelper(Nrf24Pipe::RX_PIPE0,mRxPipeAddress0);
@@ -412,6 +397,27 @@ private:
 	static void readLastIrq()
 	{
 		mLastIRQ = nrf_comm::readStatus() & RF24_IRQ_MASK;
+	}
+
+	static void waitForTxFifoEmpty()
+	{
+		uint32_t currentTime = _sys::millis();
+		uint32_t timeout = currentTime + 100;
+		bool timeOut = false;
+		//IRQ is high
+
+		while(!(nrf_comm::readFifoStatus() & RF24_TX_EMPTY)) {
+			if(timeout < currentTime) {
+				_ce::clear();
+				nrf_comm::flushTx();
+				timeOut = true;
+				break;
+			}
+			currentTime = _sys::millis();
+		}
+		_ce::clear();
+		checkAndClearIrq();
+		mLastTxPassed = (timeOut == true) ? false : mLastTxPassed;
 	}
 
 	static void setAddressWidth()
