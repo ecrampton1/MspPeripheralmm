@@ -7,11 +7,12 @@ TOOLS_PREFIX := msp430-elf-
 #TOOLS_PATH   := $(dir $(shell which $(TOOLS_PREFIX)g++))
 #TOOLS_PATH   := /opt/gcc-msp430-elf-dev-20160217/bin/
 #TOOLS_PATH   := /opt/gcc-msp430-elf-dev-20160407/bin/
-TOOLS_PATH   := /opt/gcc-msp430-elf-dev-20161016/bin/
+#TOOLS_PATH   := /opt/gcc-msp430-elf-dev-20161016/bin/
+TOOLS_PATH   := /opt/gcc-msp430-elf-dev-20161112/bin/
 
 # Compiler/linker flags to sepcify CPU
 MMCU := msp430g2553
-CPU_FLAGS   := -mmcu=$(MMCU) -Os -Wall -g -s -minrt -Wno-main -pedantic -Wreturn-type -Wunused -fdata-sections -ffunction-sections -fwrapv -fomit-frame-pointer -fno-exceptions 
+CPU_FLAGS   := -mmcu=$(MMCU) -Os -Wall -g -s -Wno-main -pedantic -Wreturn-type -Wunused -fdata-sections -ffunction-sections -fwrapv -fomit-frame-pointer -fno-exceptions 
 #CPU_FLAGS   := -mmcu=$(MMCU) -Wall -minrt -pedantic -Wreturn-type -Wunused -g -MMD -fwrapv -fomit-frame-pointer -fno-exceptions
 
 
@@ -22,7 +23,7 @@ CXXFLAGS    := -std=c++11 $(CPU_FLAGS) -lstdc++
 CFLAGS      := $(CPU_FLAGS) -lc
 ASFLAGS     := -mmcu=$(MMCU) --x assembler-with-cpp -Wa
 LDFLAGS     := $(addprefix -T ,$(LDSCRIPTS))
-LDFLAGS     += -mmcu=$(MMCU) -minrt -Wl,--gc-sections  -lstdc++
+LDFLAGS     += -mmcu=$(MMCU) -Wl,--gc-sections  -lstdc++
 #LDFLAGS     += -Wl,--gc-sections
 
 
