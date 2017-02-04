@@ -107,6 +107,10 @@ public:
 		mPinHandler = cb;
 		mPinArgs = args;
 	}
+	static constexpr uint8_t getBitValue()
+	{
+		return _pin;
+	}
 
 	static callback_t mPinHandler;
 	static callback_args_t mPinArgs;
@@ -174,6 +178,10 @@ public:
 	static void select2On()
 	{
 		return;
+	}
+	static constexpr uint8_t getBitValue()
+	{
+		return 0;
 	}
 };
 
