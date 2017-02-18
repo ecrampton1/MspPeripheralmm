@@ -47,6 +47,7 @@ void print_dec()
 }
 
 
+
 int main()
 {
 
@@ -56,19 +57,19 @@ int main()
 	led1::output();
 	uart::init();
 
-	int8_t* buffer = NULL;
-	buffer = (int8_t*)malloc(20);
 
-	PRINT("Buffer: ", (int)buffer, ENDL)
+	int8_t* buffer = nullptr;
+	for(int i = 0; i < 400; ++i) {
 
-	if(buffer != NULL) {
+		buffer = (int8_t*)malloc(4);
 
-		for(int i = 0; i < 20; ++i) {
-			buffer[i] = i;
-			uart::send(buffer[i]);
-		}
-
+		PRINT("Buffer: ", (int)buffer, " i: ", i, ENDL)
+		free(buffer);
+		buffer = nullptr;
+		sys::delayInMs(100);
 	}
+
+	while(1);
 
 	uart::send("Start Uart Test\n");
 	print_hex();

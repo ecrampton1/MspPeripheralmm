@@ -54,17 +54,17 @@ public:
 	}
 	static void pullUp()
 	{
-		*((volatile uint8_t*)_port::mResistor) |= _pin;
+		*((volatile uint8_t*)_port::mResistorReg) |= _pin;
 		set();
 	}
 	static void pullDown()
 	{
-		*((volatile uint8_t*)_port::mResistor) |= _pin;
+		*((volatile uint8_t*)_port::mResistorReg) |= _pin;
 		clear();
 	}
 	static void pullOff()
 	{
-		*((volatile uint8_t*)_port::mResistor) &= ~_pin;
+		*((volatile uint8_t*)_port::mResistorReg) &= ~_pin;
 	}
 	static void intEnable()
 	{
@@ -84,7 +84,7 @@ public:
 	}
 	static bool irqFlag()
 	{
-		return *((volatile uint8_t*)_port::mInputReg) & _pin;
+		return *((volatile uint8_t*)_port::mIntFlagReg) & _pin;
 	}
 	static void selectOff()
 	{

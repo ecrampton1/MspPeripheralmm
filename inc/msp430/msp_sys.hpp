@@ -57,7 +57,7 @@ public:
 
 	/** @brief Blocks the specified time in milliseconds
 	 */
-	static void delayInMs(SystemTime time)
+	/*static void delayInMs(SystemTime time)
 	{
 		SystemTime current = millis();
 		SystemTime end = current + time;
@@ -69,6 +69,24 @@ public:
 				while(current > 0) { current = millis(); }
 			}
 			while(current < end) { current = millis(); }
+		}
+	}*/
+
+	static void delayInMs(SystemTime time)
+	{
+		//SystemTime current = millis();
+		SystemTime start = micros(); //Fix this next time you run!
+
+		//ensure we running
+		if((WDTCTL & WDTHOLD) == 0) {
+			while(time)
+			{
+				if((micros() - start) >= 1000) {
+					--time;
+					start += 1000;
+				}
+				//_BIS_SR(LPM0_bits+GIE);
+			}
 		}
 	}
 

@@ -44,7 +44,6 @@ __attribute__((__interrupt__(PORT1_VECTOR))) void PORT1_Irq(void)
 	uint8_t flag = P1IFG;
 	uint8_t enabled = P1IE;
 
-
 	PIN_INTERRUPT_HANDLER(Port1,BIT0)
 	PIN_INTERRUPT_HANDLER(Port1,BIT1)
 	PIN_INTERRUPT_HANDLER(Port1,BIT2)
@@ -53,7 +52,25 @@ __attribute__((__interrupt__(PORT1_VECTOR))) void PORT1_Irq(void)
 	PIN_INTERRUPT_HANDLER(Port1,BIT5)
 	PIN_INTERRUPT_HANDLER(Port1,BIT6)
 	PIN_INTERRUPT_HANDLER(Port1,BIT7)
+	P1IFG &= 0x00;  //TODO is this needed to clear?
+}
+#endif
 
+#if defined( PORT2_ENABLE_INT)
+__attribute__((__interrupt__(PORT2_VECTOR))) void PORT2_Irq(void)
+{
+	uint8_t flag = P2IFG;
+	uint8_t enabled = P2IE;
+
+	PIN_INTERRUPT_HANDLER(Port2,BIT0)
+	PIN_INTERRUPT_HANDLER(Port2,BIT1)
+	PIN_INTERRUPT_HANDLER(Port2,BIT2)
+	PIN_INTERRUPT_HANDLER(Port2,BIT3)
+	PIN_INTERRUPT_HANDLER(Port2,BIT4)
+	PIN_INTERRUPT_HANDLER(Port2,BIT5)
+	PIN_INTERRUPT_HANDLER(Port2,BIT6)
+	PIN_INTERRUPT_HANDLER(Port2,BIT7)
+	P2IFG &= 0x00;  //TODO is this needed to clear?
 }
 #endif
 

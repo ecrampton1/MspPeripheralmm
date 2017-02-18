@@ -8,27 +8,35 @@ extern "C" {
 
 void pinHandle (void* args)
 {
-	led1::toggle();
+	led0::toggle();
 }
 
 int main()
 {
 	sys::init();
-	//sys::enabletWatchDog(); //starts counting for system time
+	sys::enableWatchDog(); //starts counting for system time
 	led0::output();
 	led1::output();
 	Periph::callback_t cb = pinHandle;
 	button::setPinIrqHandler(cb,(Periph::callback_args_t)0);
+	button::clear();
 	button::input();
+	button::pullUp();
 	button::edgeHighToLow();
 	button::intEnable();
 	uart::init();
 	uart::send("Start Gpio Test\n");
-
+	int en = P1IE;
+	P1IFG = 0;
+	uart::send(en);
+	uart::send("\n");
 
 	while(1) {
-		led0::toggle();
-		__delay_cycles(5000000);
+		led1::toggle();
+		__delay_cycles(50000000);
+		int flag = P1IFG;
+		uart::send(flag);
+		uart::send("\n");
 	}
 
 	return 1;
