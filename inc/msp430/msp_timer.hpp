@@ -168,6 +168,15 @@ public:
 
 		return -1;
 	}
+
+	static void startFreeRunningTimer()
+	{
+		_timer::disable_overflow_irq();
+		_timer::start_timer(TimerMode::CONT_MODE,_source);
+	}
+
+	static uint16_t getTimerCount(){ return _timer::get_counter_value(); }
+
 	static void stop() { _timer::stop_timer(); }
 
 	static void TimerHandle(void*)

@@ -77,5 +77,6 @@ void watchDog (void)
 //__attribute__((__interrupt__)) void watchDog(void)
 {
 	++mWatchDogCounter;
+	//_BIC_SR_IRQ(LPM3_bits);
 }
 
