@@ -35,7 +35,7 @@ struct DHTRawData
 };
 
 static DHTRawData gDHTRawData;*/
-using dht = DHT<dhtDataPin,msp430Timer0Int,sys>;
+using dht = DHT<dhtDataPin,msp430Timer,sys,clock_speed>;
 
 static volatile bool gReadComplete;
 
@@ -56,6 +56,8 @@ int main()
 	uart::init();
 	uart::send("Start DHT Test\n");
 	dht::setCallback(&dhtReadComplete,0);
+	sys::delayInMs(1000);
+
 
 	while(1) {
 		gReadComplete = false;
@@ -77,7 +79,7 @@ int main()
 		else {
 			PRINT("Failed\n")
 		}
-		sys::delayInMs(1000);
+		sys::delayInMs(3000);
 		led1::toggle();
 
 	}
