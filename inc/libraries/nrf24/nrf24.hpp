@@ -29,7 +29,7 @@ public:
 		_ce::output();
 		_irq::input();
 		_ce::clear();
-		_sys::delayInMs(100);
+		_sys::delayInUs(100000);
 
 		turnOnFeatures();
 		nrf_comm::writeConfig(0x0);
@@ -59,7 +59,7 @@ public:
 		clearIrq(RF24_IRQ_MASK);
 		powerUp();
 		enableAutoAck();
-		_sys::delayInMs(5);
+		_sys::delayInUs(5000);
 	}
 
 	/*
@@ -85,6 +85,9 @@ public:
 	{
 		nrf_comm::writeRfSetup( (nrf_comm::readRfSetup() & ~static_cast<uint8_t>(Nrf24Speed::RF_SPEED_RESET)) | static_cast<uint8_t>(speed));
 	}
+
+	static void flushTx() { nrf_comm::flushTx(); }
+	static void flushRx() { nrf_comm::flushRx(); }
 
 	//Opens a pipe by calling the helper function, this adds an extra
 	//element to help store Rx Pipe 0 so when performing a write this

@@ -34,6 +34,7 @@ public:
 
 	static void inline enableWatchDog()
 	{
+		mWatchDogCounter = 0;
 		 WDTCTL = watchdog_control(_speed);              // WDT as interval timer .5ms (1Mhz) 1ms (8mhz) .666 (12 mhz) .5ms (16mhz)
 		 IE1 |= WDTIE;
 		 _BIS_SR(GIE);
