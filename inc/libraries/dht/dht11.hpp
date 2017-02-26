@@ -117,7 +117,6 @@ private:
 
 	static void rxBitGpioTriggered(void* args)
 	{
-		P1OUT = 0x01;
 		if(mState == DHTStates::RECEIVE_BIT_START) {
 			mState = DHTStates::RECEIVE_BIT_END;
 			_datapin::edgeHighToLow();//wait for the rising edge
@@ -190,7 +189,6 @@ private:
 		return true;
 	}
 
-	//TODO fix this to not assume 16MHZ
 	static inline bool readBits()
 	{
 		uint8_t* ptr = reinterpret_cast<uint8_t*>(&mData);

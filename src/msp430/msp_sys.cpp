@@ -1,6 +1,6 @@
 #include "msp430/msp_sys.hpp"
 
-volatile uint32_t mWatchDogCounter = 0;
+volatile uint32_t mWatchDogCounter;
 namespace McuPeripheral {
 
 //default speed is 16MHZ
