@@ -10,7 +10,7 @@ template<uint16_t _control, uint16_t _counter, uint16_t _interrupt, uint16_t _cc
 McuPeripheral::callback_t McuPeripheral::TimerControl<_control,_counter,_interrupt,_ccc0,_ccc1, _ccc2,_ccr0,_ccr1,_ccr2>::mTimerHandler = 0;
 
 
-
+#ifdef TIMER0_ENABLE_INT
 template<>
 __attribute__((__interrupt__(TIMER0_A1_VECTOR))) void TimerControl<TACTL_, TAR_, TAIV_, TACCTL0_, TACCTL1_, TACCTL2_, TACCR0_, TACCR1_, TACCR2_>::Timer_A1(void)
 {
@@ -26,9 +26,9 @@ __attribute__((__interrupt__(TIMER0_A1_VECTOR))) void TimerControl<TACTL_, TAR_,
 	}
 
 }
+#endif
 
-
-
+#ifdef TIMER1_ENABLE_INT
 template<>
 __attribute__((__interrupt__(TIMER1_A1_VECTOR))) void TimerControl<TA1CTL_, TA1R_, TA1IV_, TA1CCTL0_, TA1CCTL1_, TA1CCTL2_,TA1CCR0_, TA1CCR1_, TA1CCR2_>::Timer_A1(void)
 {
@@ -44,6 +44,7 @@ __attribute__((__interrupt__(TIMER1_A1_VECTOR))) void TimerControl<TA1CTL_, TA1R
 	}
 
 }
-
+#endif
 
 }
+

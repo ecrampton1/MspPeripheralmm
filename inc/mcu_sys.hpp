@@ -19,7 +19,7 @@ class SystemBase
 public:
 
 protected:
-	static uint32_t mSpeed;
+	//static uint32_t mSpeed;
 
 };
 

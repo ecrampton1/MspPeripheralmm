@@ -7,9 +7,9 @@ mkfile_path := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
  #name of the target binary
 #will pass this into the makefile
 #APP_FLAGS := -DUARTA0_ENABLE_INT
-APP_FLAGS := -DPORT2_ENABLE_INT
+APP_FLAGS := -DPORT2_P3_ENABLE_INT -DTIMER0_ENABLE_INT
 BUILD_SOURCES := $(mkfile_path)/main.cpp
-BUILD_INC := $(mkfile_path)
+BUILD_INC := $(mkfile_path) external_libraries/PeripheralMessaging/inc
 OBJ_DIR = $(mkfile_path)/obj
 BUILD_SOURCE_DIRS := $(mkfile_path)
 
