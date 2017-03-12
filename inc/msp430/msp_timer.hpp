@@ -158,9 +158,11 @@ public:
 		//check if timer be running
 		if(!_timer::is_running()) {
 			//_timer::mTimerHandler = &McuTimer< _source, _timer, _microSeconds, _clock>::TimerHandle;
+			mRollOverCount=0;
 			_timer::mTimerHandler = &McuTimer< _source, _timer, _microSeconds, _clock>::TimerHandle;
 			_DINT();
 			_timer::enable_overflow_irq();
+			_timer::clear_timer();
 			_timer::start_timer(TimerMode::CONT_MODE,_source);
 			_EINT();
 			return 0;
@@ -217,6 +219,6 @@ uint16_t McuTimer< _source, _timer, _microSeconds, _clock>::mTimerCCR0Count;
 using Timer_Source = McuPeripheral::TimerSource;
 using Timer_Mode = McuPeripheral::TimerMode;
 using Timer0 = McuPeripheral::TimerControl<TACTL_, TAR_, TAIV_, TACCTL0_, TACCTL1_, TACCTL2_, TACCR0_, TACCR1_, TACCR2_>;
-using Timer1 = McuPeripheral::TimerControl<TA1CTL_, TA1R_, TA1IV_, TA1CCTL0_, TA1CCTL1_, TA1CCTL2_, TA1CCR0_, TA1CCR1_, TA1CCR2_>;
+//using Timer1 = McuPeripheral::TimerControl<TA1CTL_, TA1R_, TA1IV_, TA1CCTL0_, TA1CCTL1_, TA1CCTL2_, TA1CCR0_, TA1CCR1_, TA1CCR2_>;
 
 #endif //_MSP_TIMER_HPP

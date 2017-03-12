@@ -4,7 +4,7 @@ volatile uint32_t mWatchDogCounter;
 namespace McuPeripheral {
 
 //default speed is 16MHZ
-uint32_t SystemBase::mSpeed = static_cast<uint32_t>(Speed::SPEED_16MHZ);
+//uint32_t SystemBase::mSpeed = static_cast<uint32_t>(Speed::SPEED_16MHZ);
 
 void enable_irq()  { __eint(); }
 void disable_irq()  { __dint(); }
@@ -19,7 +19,6 @@ void McuSystem<Speed::SPEED_##S>::init() \
 	disableWatchDog(); \
 	BCSCTL1 = CALBC1_##S; \
 	DCOCTL = CALDCO_##S; \
-	mSpeed = static_cast<uint32_t>(Speed::SPEED_##S) ; \
 	BCSCTL3 |= XCAP_3; \
 }
 FOR_ALL_SPEEDS( INIT_FUNC )

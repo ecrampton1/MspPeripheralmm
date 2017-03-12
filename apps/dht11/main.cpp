@@ -64,6 +64,7 @@ int main()
 		//if(dht::dhtReadBlocking()) {
 		if(dht::dhtReadNonBlocking()){
 			while(gReadComplete == false) {}
+			dht::dhtReadBlocking();
 			/*int value = dht::getData().TemperatureReal;
 			PRINT("Temperature: ", value, ENDL)
 			value = dht::getData().HumidityReal;

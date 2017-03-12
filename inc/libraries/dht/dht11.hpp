@@ -51,34 +51,27 @@ class DHT
 {
 public:
 
-	static bool dhtReadBlocking()
-	{
-		bool ret = false;
-		init();
-		startPollingComm();
-		if(startResponse()){
-			ret = readBits();
-		}
-		return (ret) ? mData.checkCRC() : ret;
-	}
-
 	static const DHTRawData& getData() { return mData; }
 
-	static bool dhtReadNonBlocking()
+	//@brief call this from loop returns true if new data is ready
+	static bool serviceOnce()
 	{
-		if(mState != DHTStates::END || mCallback == nullptr) {
-			return false;
+		bool ret = mStartBitComplete;
+		mStartBitComplete = false;
+		if(ret == true) {
+			ret = readData();
 		}
+		return ret;
+	}
+
+	///@brief NonBlocking call that sends out a 18ms start bit to dht
+	static bool sendStartBit()
+	{
 		init();
 		startInterruptComm();
 		return true;
 	}
 
-	static void setCallback(McuPeripheral::callback_t callback, void* args)
-	{
-		mCallback = callback;
-		mCallbackArgs = args;
-	}
 
 private:
 
@@ -88,31 +81,30 @@ private:
 
 	static inline void init()
 	{
-		mState = DHTStates::SEND_START;
+		mStartBitComplete = false;
 		mMask = 1; //start bit is a single bit that is captured
 		memset(&mData,0,sizeof(DHTRawData));
 	}
 
 
+	//@brief must be called after a startTransmission and a StartBitComplete
+	static bool readData()
+	{
+		/*if(mStartBitComplete == false) {
+			return false;
+		}*/
+		bool ret = false;
+		if(startResponse()){
+			ret = readBits();
+		}
+		return (ret) ? mData.checkCRC() : ret;
+	}
+
+
 	static void startBitTimerComplete(void* args)
 	{
+		mStartBitComplete = true;
 		_timer::stop();
-		_timer::startFreeRunningTimer();
-
-		if(mState == DHTStates::SEND_START) {
-			_datapin::pullUp();
-			_datapin::edgeLowToHigh();//wait for the rising edge
-			mState = DHTStates::RECEIVE_BIT_START;
-			//mSysTime = _sys::micros();
-			mSysTime = _timer::getTimerCount();
-			_datapin::input(); //THis should pull the line high until the sensor pulls it low
-			//while(_datapin::read()); //wait for it to go high
-			_sys::delayInUs(20);
-			_datapin::intEnable();
-		}
-		else {
-			mState = DHTStates::END;
-		}
 	}
 
 	static void rxBitGpioTriggered(void* args)
@@ -138,7 +130,6 @@ private:
 				mState = DHTStates::END;
 				_datapin::intDisable();
 				_timer::stop();
-				mCallback(mCallbackArgs);
 			}
 		}
 	}
@@ -176,8 +167,13 @@ private:
 
 	static inline bool startResponse()
 	{
+
+		_datapin::pullUp();
+		_datapin::set();
+		_sys::delayInUs(20);
 		//Allow dht to drive pin low
 		_datapin::input();
+		_timer::startFreeRunningTimer();
 		uint16_t start = _timer::getTimerCount();
 
 		while(_datapin::read()) {
@@ -223,8 +219,7 @@ private:
 	}
 
 	static McuPeripheral::SystemTime mSysTime;
-	static McuPeripheral::callback_t mCallback;
-	static void* mCallbackArgs;
+	static bool mStartBitComplete;
 	static DHTStates mState;
 	static DHTRawData mData;
 	static uint8_t mMask;
@@ -237,9 +232,7 @@ DHTRawData DHT<_datapin,_timer,_sys,_clock>::mData;
 template<class _datapin,class _timer, class _sys, Speed _clock>
 uint8_t DHT<_datapin,_timer,_sys,_clock>::mMask;
 template<class _datapin,class _timer, class _sys, Speed _clock>
-McuPeripheral::callback_t DHT<_datapin,_timer,_sys,_clock>::mCallback = nullptr;
-template<class _datapin,class _timer, class _sys, Speed _clock>
-void* DHT<_datapin,_timer,_sys,_clock>::mCallbackArgs = nullptr;
+bool DHT<_datapin,_timer,_sys,_clock>::mStartBitComplete;
 template<class _datapin,class _timer, class _sys, Speed _clock>
 volatile uint8_t* DHT<_datapin,_timer,_sys,_clock>::mIrqIndexPtr = nullptr;
 template<class _datapin,class _timer, class _sys, Speed _clock>
