@@ -4,7 +4,7 @@
 
 //_closed , true if gpio high to close relay else false if gpio low to close relay.
 //this should init open
-template <bool _closed, class _gpio>
+template <bool _closedhigh, class _gpio>
 class RelayControl
 {
 public:
@@ -17,12 +17,17 @@ public:
 
 	static bool isClosed()
 	{
-		return _gpio::read();
+		if(_closedhigh) {
+			return _gpio::read();
+		}
+		else {
+			return !_gpio::read();
+		}
 	}
 
 	static void open()
 	{
-		if(_closed) {
+		if(_closedhigh) {
 			_gpio::clear();
 		}
 		else {
@@ -32,7 +37,7 @@ public:
 
 	static void close()
 	{
-		if(_closed) {
+		if(_closedhigh) {
 			_gpio::set();
 		}
 		else {

@@ -8,7 +8,7 @@ extern volatile uint32_t mWatchDogCounter;
 
 namespace McuPeripheral {
 
-using SystemTime = uint32_t;
+
 
 constexpr uint16_t watchdog_control(McuSpeed m)
 {
