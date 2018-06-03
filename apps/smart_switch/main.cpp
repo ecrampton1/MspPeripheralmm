@@ -8,14 +8,11 @@
 
 
 
-using Handler = PeripheralMessages::RF24MessageHandler;
+using MessageHandler = PeripheralMessages::RF24MessageHandler;
 static constexpr uint32_t INTERVAL = 60000000; //in US
 McuPeripheral::SystemTime UpdateTime;
-static constexpr uint32_t SW_INTERVAL = 50000; //in US
 McuPeripheral::SystemTime SwTime0;
 McuPeripheral::SystemTime SwTime1;
-static const uint8_t SWITCH0 = SENSOR_SWITCH0;
-static const uint8_t SWITCH1 = SENSOR_SWITCH1;
 
 constexpr uint8_t PUSH_BUTTON_0 = 0x01;
 constexpr uint8_t PUSH_BUTTON_1 = 0x02;
@@ -27,8 +24,9 @@ using dht = DHT<dht_data_pin,msp430_timer,sys,clock_speed>;
 
 void trigger_relay( uint8_t relay, bool state, uint16_t response_node )
 {
+
 	uint8_t buffer_event[sizeof(PeripheralMessages::SwitchMessage) + sizeof(PeripheralMessages::PayloadHeader)];
-	PeripheralMessages::SwitchEventMsg switch_event(buffer_event,sizeof(buffer_event),true,SENSOR_SWITCH0);
+	PeripheralMessages::SwitchEventMsg switch_event(buffer_event,sizeof(buffer_event),true,relay);
 	//expand this to a macro to handle more switches?
 	if(relay == SENSOR_SWITCH0) {
 		if(state ) {
@@ -41,14 +39,14 @@ void trigger_relay( uint8_t relay, bool state, uint16_t response_node )
 	}
 	else if(relay == SENSOR_SWITCH1) {
 		if(state ) {
-			relay0::close();
+			relay1::close();
 		}
 		else {
-			relay0::open();
+			relay1::open();
 		}
 		switch_event.get_message_payload()->state = relay1::isClosed();
 	}
-	Handler::publish_message(switch_event,response_node);
+	MessageHandler::publish_message(switch_event,response_node);
 }
 
 
@@ -64,51 +62,23 @@ void handle_switch_request(void* args, void*  msg, uint16_t calling_id)
 
 void handle_switch_query(void* args, void*  msg, uint16_t calling_id)
 {
+	bool send = false;
 	PeripheralMessages::SwitchQueryMsg* ptr =
 			static_cast<PeripheralMessages::SwitchQueryMsg*>(msg);
 	uint8_t buffer_data[sizeof(PeripheralMessages::SwitchMessage) + sizeof(PeripheralMessages::PayloadHeader)];
-	PeripheralMessages::SwitchDataMsg switch_data(buffer_data,sizeof(buffer_data),true,SENSOR_SWITCH0);
+	PeripheralMessages::SwitchDataMsg switch_data(buffer_data,sizeof(buffer_data),true,ptr->get_message_header()->mNodeSensorId);
 	//PRINT("Switch Query: ",ptr->get_message_header()->mNodeSensorId, "is ", switch_data.get_message_payload()->state )
 	if(ptr->get_message_header()->mNodeSensorId == SENSOR_SWITCH0) {
-		switch_data.get_message_payload()->state = relay0_pin::read();
-
+		switch_data.get_message_payload()->state = relay0::isClosed();
+		send = true;
 	}
 	else if(ptr->get_message_header()->mNodeSensorId == SENSOR_SWITCH1) {
-		switch_data.get_message_payload()->state = relay1_pin::read();
-
+		switch_data.get_message_payload()->state = relay1::isClosed();
+		send = true;
 	}
-	Handler::publish_message(switch_data);
-}
-
-
-void handle_button_press(void* args)
-{
-	uint8_t* sw = static_cast<uint8_t*>(args);
-	if(*sw == SENSOR_SWITCH0) {
-		SwTime0= sys::micros() + SW_INTERVAL;
-		sw0_pin::intDisable();
-		ButtonUpdate |= PUSH_BUTTON_0;
+	if(send) {
+		MessageHandler::publish_message(switch_data);
 	}
-	else {
-		SwTime1= sys::micros() + SW_INTERVAL;
-		sw1_pin::intDisable();
-		ButtonUpdate |= PUSH_BUTTON_1;
-	}
-}
-
-
-void initialize_switches()
-{
-	sw0_pin::pullUp();
-	sw1_pin::pullUp();
-	sw0_pin::input();
-	sw0_pin::setPinIrqHandler(handle_button_press,(void *)&SWITCH0);
-	sw1_pin::input();
-	sw1_pin::setPinIrqHandler(handle_button_press,(void *)&SWITCH1);
-	sw0_pin::edgeHighToLow();
-	sw1_pin::edgeHighToLow();
-	sw0_pin::intEnable();
-	sw1_pin::intEnable();
 }
 
 
@@ -126,13 +96,16 @@ void setup()
 	uart::init();
 	relay0::init();
 	relay1::init();
-
+	uart::send("Init\n");
 	initializeIncomingMessages();
 	sys::delayInUs(20000);
-	Handler::begin();
+	MessageHandler::begin();
 	UpdateTime = 0;
 	uart::send("Start Smart Switch\n");
-	initialize_switches();
+	push_button0::init();
+	push_button1::init();
+	trigger_relay(SENSOR_SWITCH0,false,0);
+	trigger_relay(SENSOR_SWITCH1,false,0);
 }
 
 
@@ -140,11 +113,15 @@ void setup()
 void loop()
 {
 	uint32_t temp = sys::micros();
-	Handler::serviceOnce();
-	if(UpdateTime < temp) {
-		UpdateTime = temp + INTERVAL;
-		uart::send("S\n");
-		dht::sendStartBit();
+	MessageHandler::serviceOnce();
+	//move into dht class also make this better
+	if(UpdateTime < temp ) {
+		//temp to handle a overlfow issue need better handling
+		if ((( 4294967295 - temp ) > INTERVAL) ^ (UpdateTime >= INTERVAL)) {
+			UpdateTime = temp + INTERVAL;
+			uart::send("S\n");
+			dht::sendStartBit();
+		}
 	}
 
 	if(dht::serviceOnce()) {
@@ -152,21 +129,14 @@ void loop()
 			uint8_t buffer_temp[sizeof(PeripheralMessages::TemperatureMessage) + sizeof(PeripheralMessages::PayloadHeader)];
 			PeripheralMessages::TemperatureDataMsg temp_data(buffer_temp,sizeof(buffer_temp),true,SENSOR_TEMP0);
 			temp_data.get_message_payload()->temperature = dht::getData().TemperatureReal;
-			Handler::publish_message(temp_data);
+			MessageHandler::publish_message(temp_data);
 	}
-	if( SwTime0 >= temp && (ButtonUpdate & PUSH_BUTTON_0)) {
-		ButtonUpdate &= ~PUSH_BUTTON_0;
-		if( sw0_pin::read() == false) {
-			trigger_relay(SENSOR_SWITCH0,!relay0_pin::read(),0);
-		}
-		sw0_pin::intEnable();
+
+	if(push_button0::checkTriggered()) {
+		trigger_relay(SENSOR_SWITCH0,!relay0::isClosed(),0);
 	}
-	if( SwTime1 >= temp && (ButtonUpdate & PUSH_BUTTON_1)) {
-		ButtonUpdate &= ~PUSH_BUTTON_1;
-		if( sw1_pin::read() == false) {
-			trigger_relay(SENSOR_SWITCH1,!relay1_pin::read(),0);
-		}
-		sw1_pin::intEnable();
+	if(push_button1::checkTriggered()) {
+		trigger_relay(SENSOR_SWITCH1,!relay1::isClosed(),0);
 	}
 }
 

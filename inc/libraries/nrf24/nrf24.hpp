@@ -60,6 +60,7 @@ public:
 		powerUp();
 		enableAutoAck();
 		_sys::delayInUs(5000);
+		//printInfo();
 	}
 
 	/*

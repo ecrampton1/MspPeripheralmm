@@ -107,6 +107,10 @@ public:
 		mPinHandler = cb;
 		mPinArgs = args;
 	}
+	static bool isIntEnabled()
+	{
+		return (*((volatile uint8_t*)_port::mIntEnableReg) & _pin);
+	}
 	static constexpr uint8_t getBitValue()
 	{
 		return _pin;
