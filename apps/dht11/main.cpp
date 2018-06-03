@@ -55,20 +55,13 @@ int main()
 	led1::clear();
 	uart::init();
 	uart::send("Start DHT Test\n");
-	dht::setCallback(&dhtReadComplete,0);
 	sys::delayInMs(1000);
 
 
 	while(1) {
 		gReadComplete = false;
 		//if(dht::dhtReadBlocking()) {
-		if(dht::dhtReadNonBlocking()){
-			while(gReadComplete == false) {}
-			dht::dhtReadBlocking();
-			/*int value = dht::getData().TemperatureReal;
-			PRINT("Temperature: ", value, ENDL)
-			value = dht::getData().HumidityReal;
-			PRINT("Humidity: ",  value, ENDL)*/
+		if(dht::serviceOnce()) {
 			auto data = dht::getData();
 			PRINT((int)data.StartBit,ENDL)
 			PRINT((int)data.HumidityDecimal,ENDL)
