@@ -20,7 +20,7 @@ int main()
 
 	while(1) {
 
-		sys::sleepInMs(1000);
+		sys::delayInMs(1000);
 		uart::send( static_cast<int32_t>(sys::millis()),Periph::Base::BASE_DEC );
 		uart::sendLine();
 		uart::send( static_cast<int32_t>(sys::micros()), Periph::Base::BASE_DEC );

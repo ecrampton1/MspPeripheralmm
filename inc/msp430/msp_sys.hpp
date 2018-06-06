@@ -55,9 +55,9 @@ public:
 		return mWatchDogCounter * watchdog_interval_us(_speed);
 	}
 
-	/** @brief Sleeps the specified time in milliseconds
+	/** @brief Blocks the specified time in milliseconds
 	 */
-	static void sleepInMs(SystemTime time)
+	static void delayInMs(SystemTime time)
 	{
 		SystemTime current = millis();
 		SystemTime end = current + time;
