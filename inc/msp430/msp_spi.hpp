@@ -29,6 +29,7 @@ public:
 		}
 		else {
 			loadTxReg(data);
+			while(true == isBusy());
 		}
 	}
 
@@ -85,7 +86,7 @@ public:
 
 
 		REG_8(ctl1) |= UCSWRST;
-		REG_8(ctl0) |= static_cast<uint8_t>(clock) | static_cast<uint8_t>(order) | static_cast<uint8_t>(master) | UCMODE_0 | UCSYNC;
+		REG_8(ctl0) = static_cast<uint8_t>(clock) | static_cast<uint8_t>(order) | static_cast<uint8_t>(master) | UCMODE_0 | UCSYNC;
 		REG_8(br0) = divide;
 		REG_8(mctl) = 0;
 		REG_8(ctl1) |= UCSSEL_2; //smclk
@@ -181,7 +182,7 @@ public:
 		T return_data = 0;
 
 		const uint8_t* data_ptr = &data;
-		uint8_t* ret_ptr = &return_data;
+		uint8_t* ret_ptr = reinterpret_cast<uint8_t*>(&return_data);
 		for(uint16_t i = 0; i < sizeof(data); ++i) {
 			_spi::queueByte(data_ptr[i]);
 			while(_spi::isBusy());
