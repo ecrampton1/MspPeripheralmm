@@ -149,7 +149,7 @@ public:
 
 
 	template<class T>
-	static int send( const T* data, int size)
+	static int send(  T* const data, int size)
 	{
 		int i;
 		for(i = 0; i < size; ++i) {

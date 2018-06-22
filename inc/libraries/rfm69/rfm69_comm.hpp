@@ -125,6 +125,18 @@ public:
 		}
 	}
 
+	static bool writeFifo(uint8_t* const buf,const int size)
+	{
+		//I need to change REG defines to constexpr for better typing
+		uint8_t fifo = REG_FIFO | 0x80;
+		_cs::clear();
+		(void)_spi::exchange( fifo );
+		int i = _spi::send(buf,size);
+		_cs::set();
+
+		return (i == size);
+	}
+
 	static void writeRegister(const uint8_t address,const uint8_t data)
 	{
 		_cs::clear();

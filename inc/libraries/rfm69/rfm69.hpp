@@ -3,6 +3,9 @@
 #include "rfm69/rfm69_comm.hpp"
 #include <string.h>
 
+
+//TODO in general better timeout handling and fault handling in this class start with while loop timeouts.
+
 template< class _spi, class _sys,  class _cs, class _irq, CarrierFrequency _freq, uint8_t _node, uint8_t _network, class _uart>
 class Rfm69
 {
@@ -61,10 +64,27 @@ public:
 
 	}
 
-	template<class T>
-	static bool writePayload(T* const buf,const int size, bool noAck=false)
+	//TODO add timeout and noAck
+	static bool writePayload(uint8_t* const buf,const int size, bool noAck=false)
 	{
-		return false;
+
+		//used to detect a signal before transmitting.
+		enableRx();
+		while(!isReadyToSend());
+		enableStandby();
+		while(!isReady());
+
+
+		bool ret = rfm69_comm::writeFifo(buf,size);
+
+		if(ret == true) {
+			enableTx();
+		}
+
+		waitPacketSent();
+
+		return ret;
+
 	}
 
 	//.5dB steps where RSSI = RssiValue/2 dBm
@@ -175,6 +195,15 @@ private:
 		while( false == isReady() );
 	}
 
+	static void waitPacketSent()
+	{
+		//TODO should this be tied to the GPIO pin and use that instead of SPI spamming
+		while(0 == (rfm69_comm::readRegisterIrqFlags2() & RF_IRQFLAGS2_PACKETSENT)) {
+			_sys::delayInUs(1000);
+		}
+
+	}
+
 	static bool isReady()
 	{
 		return (rfm69_comm::readRegisterIrqFlags1() & RF_IRQFLAGS1_MODEREADY);
@@ -188,6 +217,16 @@ private:
 	static bool isRssiReady()
 	{
 		return (rfm69_comm::readRegisterRssiConfig() & RF_RSSI_DONE);
+	}
+
+	static bool isReadyToSend()
+	{
+		bool ret = false;
+		static constexpr int channelRssiLimit = -100;
+		if(isRxEnabled() && readRssi() < channelRssiLimit) {
+			ret = true;
+		}
+		return ret;
 	}
 
 
