@@ -49,18 +49,34 @@ enum class CarrierFrequency
 	FREQUENCY_915
 };
 
+enum class Rfm69Control : uint8_t
+{
+	NOACK = 0x00,
+	REQUESTACK = 0x01,
+	SENDACK = 0x80,
+};
 
+struct PacketHeader
+{
+	uint8_t Length;
+	uint8_t Destination;
+	uint8_t Source;
+	uint8_t Control;
+};
 
 template< class _spi, class _cs, CarrierFrequency _freq, uint8_t _network, class _uart>
 class Rfm69Comm
 {
 public:
+
+	static constexpr uint8_t BROADCAST_ADDRESS = 0xFF;
+
 	static void init()
 	{
 		_cs::output();
 		_cs::set();
 		_spi::init();
-		_spi::send((uint8_t)0x00);
+		_spi::send(static_cast<uint8_t>(0x00));
 		uint8_t ret = 0;
 		//Is this necessary? Other projects do this not sure the reasoning
 		do {
@@ -125,16 +141,23 @@ public:
 		}
 	}
 
-	static bool writeFifo(uint8_t* const buf,const int size)
+
+	//This writes a rfm69 specific packet using the FIFO, note you can send empty packets useful for acks
+	static int writePacket(PacketHeader& header, uint8_t* const buf=nullptr)
 	{
+
 		//I need to change REG defines to constexpr for better typing
-		uint8_t fifo = REG_FIFO | 0x80;
+		uint8_t addr = REG_FIFO | WRITE_ACCESS;
 		_cs::clear();
-		(void)_spi::exchange( fifo );
-		int i = _spi::send(buf,size);
+		_spi::send( addr );
+		int i = _spi::send(reinterpret_cast<uint8_t*>(&header),sizeof(PacketHeader));
+		if(header.Length > sizeof(PacketHeader)) {
+			uint8_t userLength = header.Length - sizeof(PacketHeader);
+			i = i + _spi::send(buf,userLength);
+		}
 		_cs::set();
 
-		return (i == size);
+		return i;
 	}
 
 	static void writeRegister(const uint8_t address,const uint8_t data)
@@ -203,8 +226,7 @@ public:
 	static uint8_t readFifo(uint8_t* ret_buf,const int size)
 	{
 		_cs::clear();
-		uint8_t fifo = REG_FIFO;
-		uint8_t ret = _spi::exchange( fifo );
+		uint8_t ret = _spi::exchange( static_cast<uint8_t>(REG_FIFO) );
 		//This is actually the length of the payload in FIFO
 		ret = _spi::exchange( DUMMY_BYTE );
 		ret_buf[0] = ret;

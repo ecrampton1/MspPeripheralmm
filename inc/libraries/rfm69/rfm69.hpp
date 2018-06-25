@@ -17,7 +17,7 @@ public:
 	{
 		rfm69_comm::init();
 		setNodeAddress(_node);
-		waitForReady();
+		waitForModeReady();
 		configInterrupt();
 		mPayloadReady = false;
 	}
@@ -36,13 +36,13 @@ public:
 	static void setNodeAddress(uint8_t address)
 	{
 		rfm69_comm::writeRegisterNodeAddress(address);
-		mNodeAddress = address;
+		mPacketHeader.Source = address;
 	}
 
 	static uint8_t getNodeAddress()
 	{
-		mNodeAddress = rfm69_comm::readRegisterNodeAddress();
-		return mNodeAddress;
+		mPacketHeader.Source = rfm69_comm::readRegisterNodeAddress();
+		return mPacketHeader.Source;
 	}
 
 	static bool isPayloadReady()
@@ -65,24 +65,18 @@ public:
 	}
 
 	//TODO add timeout and noAck
-	static bool writePayload(uint8_t* const buf,const int size, bool noAck=false)
+	static bool writePayload(uint8_t* const buf, const int size, uint8_t desitnation_node, bool noAck=false)
 	{
+		buildPacketHeader(size,desitnation_node,noAck);
+		forceRestartRx();
+		waitForReadyToSend();
 
-		//used to detect a signal before transmitting.
-		enableRx();
-		while(!isReadyToSend());
-		enableStandby();
-		while(!isReady());
-
-
-		bool ret = rfm69_comm::writeFifo(buf,size);
-
-		if(ret == true) {
+		int ret = rfm69_comm::writePacket(mPacketHeader,buf);
+		_uart::send(ret);
+		if(ret == (size + sizeof(PacketHeader))) {
 			enableTx();
+			ret = waitPacketSent();
 		}
-
-		waitPacketSent();
-
 		return ret;
 
 	}
@@ -123,7 +117,7 @@ public:
 		forceRestartRx();
 		rfm69_comm::writeRegisterOpMode((rfm69_comm::readRegisterOpMode() & 0xE3) | RF_OPMODE_RECEIVER);
 		enablePayloadReadyIrq();
-		waitForReady();
+		waitForModeReady();
 	}
 
 	static void enableSleep()
@@ -150,6 +144,18 @@ public:
 	//TODO add setnetwork id function?
 
 private:
+
+	static void buildPacketHeader(const int size, uint8_t desitnation_node, bool noAck)
+	{
+		mPacketHeader.Destination = desitnation_node;
+		mPacketHeader.Length = size + sizeof(mPacketHeader);
+		if(false == noAck) {
+			mPacketHeader.Control = static_cast<uint8_t>(Rfm69Control::REQUESTACK);
+		}
+		else {
+			mPacketHeader.Control = static_cast<uint8_t>(Rfm69Control::NOACK);
+		}
+	}
 
 	static void configInterrupt()
 	{
@@ -189,19 +195,29 @@ private:
 		rfm69_comm::writeRegisterOpMode((rfm69_comm::readRegisterOpMode() & 0xE3) | RF_OPMODE_STANDBY);
 	}
 
-	//TODO add timeout and return bool
-	static void waitForReady()
+	static bool waitForModeReady()
 	{
-		while( false == isReady() );
+		static const uint32_t timeOut = 500;
+		uint32_t currentTime = _sys::millis();
+		while( false == isReady() ){
+			if(currentTime + timeOut < _sys::millis()) {
+				return false; //Something not quite right.
+			}
+		}
+		return true;
 	}
 
-	static void waitPacketSent()
+	static bool waitPacketSent()
 	{
-		//TODO should this be tied to the GPIO pin and use that instead of SPI spamming
+		int i = 0;
+
 		while(0 == (rfm69_comm::readRegisterIrqFlags2() & RF_IRQFLAGS2_PACKETSENT)) {
 			_sys::delayInUs(1000);
+			if(++i > 500) {
+				return false;
+			}
 		}
-
+		return true;
 	}
 
 	static bool isReady()
@@ -219,24 +235,45 @@ private:
 		return (rfm69_comm::readRegisterRssiConfig() & RF_RSSI_DONE);
 	}
 
-	static bool isReadyToSend()
+	static bool waitForReadyToSend()
+	{
+		static const uint32_t timeOut = 500;
+		uint32_t currentTime = _sys::millis();
+
+		enableRx();
+		while(false == checkRxRssiLimit()) {
+			if(currentTime + timeOut < _sys::millis()) {
+				return false; //Something not quite right.
+			}
+		}
+
+		enableStandby();
+		if(false == waitForModeReady()) {
+			return false; //Something not quite right.
+		}
+
+		return true;
+	}
+
+	static bool checkRxRssiLimit()
 	{
 		bool ret = false;
 		static constexpr int channelRssiLimit = -100;
-		if(isRxEnabled() && readRssi() < channelRssiLimit) {
+		if(isRxEnabled() && readRssi(true) < channelRssiLimit) {
 			ret = true;
 		}
 		return ret;
 	}
 
 
-	static uint8_t mNodeAddress;
+
+	static PacketHeader mPacketHeader;
 	static char mEncryptKey[16];
 	static bool mPayloadReady;
 };
 
 template< class _spi, class _sys,  class _cs, class _irq, CarrierFrequency _freq, uint8_t _node, uint8_t _network, class _uart>
-uint8_t Rfm69<_spi, _sys, _cs, _irq, _freq, _node,_network, _uart>::mNodeAddress = 0;
+PacketHeader Rfm69<_spi, _sys, _cs, _irq, _freq, _node,_network, _uart>::mPacketHeader;
 template< class _spi, class _sys,  class _cs, class _irq, CarrierFrequency _freq, uint8_t _node, uint8_t _network, class _uart>
 bool Rfm69<_spi, _sys, _cs, _irq, _freq, _node,_network, _uart>::mPayloadReady = false;
 template< class _spi, class _sys,  class _cs, class _irq, CarrierFrequency _freq, uint8_t _node, uint8_t _network, class _uart>

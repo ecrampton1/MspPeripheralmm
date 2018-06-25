@@ -147,7 +147,7 @@ public:
 	}
 
 	template<class T>
-	static const void send( const T data, const Base base=Base::BASE_HEX )
+	static const void send( const T data, const Base base=Base::BASE_DEC )
 	{
 		static char buf[sizeof(T)*4+1];
 		itoa(data,buf, base);
