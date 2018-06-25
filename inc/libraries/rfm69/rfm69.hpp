@@ -55,8 +55,8 @@ public:
 		//disable interrupts?
 		mPayloadReady = false;
 		enableStandby();
-		uint8_t length = rfm69_comm::readFifo(buf,size);
-		if(3 > length) {
+		uint8_t length = rfm69_comm::readPacket(mPacketHeader,buf,size);
+		if(0 == length) {
 			forceRestartRx();
 		}
 
