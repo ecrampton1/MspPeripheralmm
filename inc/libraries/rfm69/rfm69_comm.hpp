@@ -49,12 +49,9 @@ enum class CarrierFrequency
 	FREQUENCY_915
 };
 
-enum class Rfm69Control : uint8_t
-{
-	NOACK = 0x00,
-	REQUESTACK = 0x01,
-	SENDACK = 0x80,
-};
+constexpr uint8_t NOACK = 0x00;
+constexpr uint8_t REQUEST_ACK = 0x01;
+constexpr uint8_t SEND_ACK = 0x80;
 
 struct PacketHeader
 {

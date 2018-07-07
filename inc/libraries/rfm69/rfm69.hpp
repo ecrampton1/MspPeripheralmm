@@ -22,7 +22,6 @@ public:
 		mPayloadReady = false;
 	}
 
-
 	static void putToSleep()
 	{
 		enableSleep();
@@ -36,13 +35,13 @@ public:
 	static void setNodeAddress(uint8_t address)
 	{
 		rfm69_comm::writeRegisterNodeAddress(address);
-		mPacketHeader.Source = address;
+		mNode = address;
 	}
 
 	static uint8_t getNodeAddress()
 	{
-		mPacketHeader.Source = rfm69_comm::readRegisterNodeAddress();
-		return mPacketHeader.Source;
+		mNode = rfm69_comm::readRegisterNodeAddress();
+		return mNode;
 	}
 
 	static bool isPayloadReady()
@@ -65,17 +64,15 @@ public:
 	}
 
 	//TODO add timeout and noAck
-	static bool writePayload(uint8_t* const buf, const int size, uint8_t desitnation_node, bool noAck=false)
+	static bool writePayload(uint8_t* const buf, const int size, uint8_t desitnation_node, uint8_t control=REQUEST_ACK)
 	{
-		buildPacketHeader(size,desitnation_node,noAck);
-		forceRestartRx();
+		buildPacketHeader(size,desitnation_node,REQUEST_ACK);
 		waitForReadyToSend();
 
 		int ret = rfm69_comm::writePacket(mPacketHeader,buf);
-		_uart::send(ret);
 		if(ret == (size + sizeof(PacketHeader))) {
 			enableTx();
-			ret = waitPacketSent();
+			ret = waitForPacketSent();
 		}
 		return ret;
 
@@ -130,31 +127,17 @@ public:
 		return (rfm69_comm::readRegisterOpMode() & RF_OPMODE_RECEIVER);
 	}
 
-	static uint8_t getIrqFlags1()
-	{
-		return rfm69_comm::readRegisterIrqFlags1();
-	}
-
-	static uint8_t getIrqFlags2()
-	{
-		return rfm69_comm::readRegisterIrqFlags2();
-	}
-
 	//TODO Listen Mode?
 	//TODO add setnetwork id function?
 
 private:
 
-	static void buildPacketHeader(const int size, uint8_t desitnation_node, bool noAck)
+	static void buildPacketHeader(const int size, uint8_t desitnation_node, uint8_t control)
 	{
+		mPacketHeader.Source = mNode;
 		mPacketHeader.Destination = desitnation_node;
 		mPacketHeader.Length = size + sizeof(mPacketHeader);
-		if(false == noAck) {
-			mPacketHeader.Control = static_cast<uint8_t>(Rfm69Control::REQUESTACK);
-		}
-		else {
-			mPacketHeader.Control = static_cast<uint8_t>(Rfm69Control::NOACK);
-		}
+		mPacketHeader.Control = control;
 	}
 
 	static void configInterrupt()
@@ -207,7 +190,7 @@ private:
 		return true;
 	}
 
-	static bool waitPacketSent()
+	static bool waitForPacketSent()
 	{
 		int i = 0;
 
@@ -240,6 +223,7 @@ private:
 		static const uint32_t timeOut = 500;
 		uint32_t currentTime = _sys::millis();
 
+		forceRestartRx();
 		enableRx();
 		while(false == checkRxRssiLimit()) {
 			if(currentTime + timeOut < _sys::millis()) {
@@ -270,6 +254,7 @@ private:
 	static PacketHeader mPacketHeader;
 	static char mEncryptKey[16];
 	static bool mPayloadReady;
+	static uint8_t mNode;
 };
 
 template< class _spi, class _sys,  class _cs, class _irq, CarrierFrequency _freq, uint8_t _node, uint8_t _network, class _uart>
@@ -278,5 +263,7 @@ template< class _spi, class _sys,  class _cs, class _irq, CarrierFrequency _freq
 bool Rfm69<_spi, _sys, _cs, _irq, _freq, _node,_network, _uart>::mPayloadReady = false;
 template< class _spi, class _sys,  class _cs, class _irq, CarrierFrequency _freq, uint8_t _node, uint8_t _network, class _uart>
 char Rfm69<_spi, _sys, _cs, _irq, _freq, _node,_network, _uart>::mEncryptKey[16] = { 0 };
+template< class _spi, class _sys,  class _cs, class _irq, CarrierFrequency _freq, uint8_t _node, uint8_t _network, class _uart>
+uint8_t Rfm69<_spi, _sys, _cs, _irq, _freq, _node,_network, _uart>::mNode = 0xFF;
 
 #endif
