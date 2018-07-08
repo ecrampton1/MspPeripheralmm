@@ -10,7 +10,6 @@ static constexpr uint8_t ACK_TIMEOUT = 25;
 template< class _spi, class _sys,  class _cs, class _irq, CarrierFrequency _freq, uint8_t _node, uint8_t _network, class _uart>
 class Rfm69
 {
-
 	using rfm69_comm = Rfm69Comm< _spi, _cs, _freq, _network, _uart >;
 
 public:
@@ -62,19 +61,21 @@ public:
 		}
 
 		if(REQUEST_ACK == mPacketHeader.Control){
-			buildPacketHeader(0,mPacketHeader.Source,SEND_ACK);
-			if(false == waitForReadyToSend()) { _uart::sendLine("Fails 1"); }
-			if(false == writeAndWaitForSent(nullptr)) { _uart::sendLine("Fails 2"); }
+			writePayload(buf,size,mPacketHeader.Source,SEND_ACK);
 		}
 
 		return length;
 
 	}
 
-	//TODO add timeout and noAck
 	static bool writePayload(uint8_t* const buf, const int size, uint8_t destination_node)
 	{
-		buildPacketHeader(size,destination_node,NO_ACK);
+		return writePayload(buf,size,destination_node,NO_ACK);
+	}
+
+	static bool writePayload(uint8_t* const buf, const int size, uint8_t destination_node, uint8_t control)
+	{
+		buildPacketHeader(size,destination_node,control);
 
 		if(false == waitForReadyToSend()){
 			return false;
@@ -91,9 +92,7 @@ public:
 
 		bool ret = false;
 		for(int i = 0; i < ACK_RETRIES; ++i) {
-			waitForReadyToSend();
-			buildPacketHeader(size,destination_node,REQUEST_ACK);
-			writeAndWaitForSent(buf);
+			writePayload(buf,size,destination_node,REQUEST_ACK);
 			enableRx();
 			int j = 0;
 			while(false == mPayloadReady) {
@@ -103,9 +102,6 @@ public:
 				}
 			}
 			if(j > ACK_TIMEOUT) {continue;}
-			_uart::send("Received");
-			_uart::send(mPacketHeader.Control);
-			_uart::sendLine();
 			readPayload(nullptr,0);
 			if(SEND_ACK == mPacketHeader.Control && destination_node == mPacketHeader.Source){
 				ret = true;
@@ -148,17 +144,17 @@ public:
 		rfm69_comm::writeRegisterPacketConfig2(rfm69_comm::readRegisterPacketConfig2() & ~RF_PACKET2_AES_ON );
 	}
 
+	static void enableSleep()
+	{
+		rfm69_comm::writeRegisterOpMode((rfm69_comm::readRegisterOpMode() & 0xE3) | RF_OPMODE_SLEEP);
+	}
+
 	static void enableRx()
 	{
 		forceRestartRx();
 		rfm69_comm::writeRegisterOpMode((rfm69_comm::readRegisterOpMode() & 0xE3) | RF_OPMODE_RECEIVER);
 		enablePayloadReadyIrq();
 		waitForModeReady();
-	}
-
-	static void enableSleep()
-	{
-		rfm69_comm::writeRegisterOpMode((rfm69_comm::readRegisterOpMode() & 0xE3) | RF_OPMODE_SLEEP);
 	}
 
 	static bool isRxEnabled()
@@ -197,21 +193,24 @@ private:
 		}
 	}
 
-	static bool writeAndWaitForSent(uint8_t* const buf)
+	static void enablePayloadReadyIrq()
 	{
-		rfm69_comm::writePacket(mPacketHeader,buf);
-		enableTx();
-		return waitForPacketSent();
+		rfm69_comm::writeRegisterDioMapping1(RF_DIOMAPPING1_DIO0_01);//DIO0 triggers on payload ready in rx mode
+	}
+
+	static bool isReady()
+	{
+		return (rfm69_comm::readRegisterIrqFlags1() & RF_IRQFLAGS1_MODEREADY);
+	}
+
+	static bool isIrqPayloadReady()
+	{
+		return (rfm69_comm::readRegisterIrqFlags2() & RF_IRQFLAGS2_PAYLOADREADY);
 	}
 
 	static void forceRestartRx()
 	{
 		rfm69_comm::writeRegisterPacketConfig2(rfm69_comm::readRegisterPacketConfig2() | RF_PACKET2_RXRESTART);
-	}
-
-	static void enablePayloadReadyIrq()
-	{
-		rfm69_comm::writeRegisterDioMapping1(RF_DIOMAPPING1_DIO0_01);//DIO0 triggers on payload ready in rx mode
 	}
 
 	static void enableTx()
@@ -222,6 +221,13 @@ private:
 	static void enableStandby()
 	{
 		rfm69_comm::writeRegisterOpMode((rfm69_comm::readRegisterOpMode() & 0xE3) | RF_OPMODE_STANDBY);
+	}
+
+	static bool writeAndWaitForSent(uint8_t* const buf)
+	{
+		rfm69_comm::writePacket(mPacketHeader,buf);
+		enableTx();
+		return waitForPacketSent();
 	}
 
 	static bool waitForModeReady()
@@ -247,16 +253,6 @@ private:
 			}
 		}
 		return true;
-	}
-
-	static bool isReady()
-	{
-		return (rfm69_comm::readRegisterIrqFlags1() & RF_IRQFLAGS1_MODEREADY);
-	}
-
-	static bool isIrqPayloadReady()
-	{
-		return (rfm69_comm::readRegisterIrqFlags2() & RF_IRQFLAGS2_PAYLOADREADY);
 	}
 
 	static bool isRssiReady()
@@ -294,7 +290,6 @@ private:
 		}
 		return ret;
 	}
-
 
 
 	static PacketHeader mPacketHeader;
