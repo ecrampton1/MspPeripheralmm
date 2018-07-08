@@ -142,7 +142,6 @@ public:
 	//This writes a rfm69 specific packet using the FIFO, note you can send empty packets useful for acks
 	static int writePacket(PacketHeader& header, uint8_t* const buf=nullptr)
 	{
-
 		//I need to change REG defines to constexpr for better typing
 		uint8_t addr = REG_FIFO | WRITE_ACCESS;
 		_cs::clear();
@@ -220,7 +219,7 @@ public:
 	READ_8BIT_REGISTER( RssiValue, REG_RSSIVALUE )
 	READ_8BIT_REGISTER( PacketConfig2, REG_PACKETCONFIG2 )
 
-	static uint8_t readPacket(PacketHeader& header,uint8_t* ret_buf,const int size)
+	static int readPacket(PacketHeader& header,uint8_t* ret_buf,const int size)
 	{
 		_cs::clear();
 		_spi::send( static_cast<uint8_t>(REG_FIFO) );
@@ -230,7 +229,7 @@ public:
 		//sanity check that our buffer size can handle this and its not 0
 		if(header.Length < sizeof(header)) {
 			_cs::set();
-			return 0;
+			return -1;
 		}
 
 		header.Destination = _spi::exchange( DUMMY_BYTE );
@@ -238,7 +237,10 @@ public:
 		header.Control = _spi::exchange( DUMMY_BYTE );
 
 
-		uint8_t payloadLength = header.Length - sizeof(header);
+		int payloadLength = header.Length - sizeof(header);
+		if(payloadLength > size){
+			return -1;
+		}
 		for(int i = 0; i < payloadLength; ++i)
 		{
 			ret_buf[i] = _spi::exchange( DUMMY_BYTE );

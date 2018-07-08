@@ -3,7 +3,8 @@
 #include "rfm69/rfm69_comm.hpp"
 #include <string.h>
 
-
+static constexpr uint8_t ACK_RETRIES = 5;
+static constexpr uint8_t ACK_TIMEOUT = 25;
 //TODO in general better timeout handling and fault handling in this class start with while loop timeouts.
 
 template< class _spi, class _sys,  class _cs, class _irq, CarrierFrequency _freq, uint8_t _node, uint8_t _network, class _uart>
@@ -54,8 +55,8 @@ public:
 		//disable interrupts?
 		mPayloadReady = false;
 		enableStandby();
-		uint8_t length = rfm69_comm::readPacket(mPacketHeader,buf,size);
-		if(0 == length) {
+		int length = rfm69_comm::readPacket(mPacketHeader,buf,size);
+		if(0 > length) {
 			forceRestartRx();
 		}
 
@@ -64,18 +65,42 @@ public:
 	}
 
 	//TODO add timeout and noAck
-	static bool writePayload(uint8_t* const buf, const int size, uint8_t desitnation_node, uint8_t control=REQUEST_ACK)
+	static bool writePayload(uint8_t* const buf, const int size, uint8_t destination_node)
 	{
-		buildPacketHeader(size,desitnation_node,REQUEST_ACK);
-		waitForReadyToSend();
+		buildPacketHeader(size,destination_node,NOACK);
 
-		int ret = rfm69_comm::writePacket(mPacketHeader,buf);
-		if(ret == (size + sizeof(PacketHeader))) {
-			enableTx();
-			ret = waitForPacketSent();
+		if(false == waitForReadyToSend()){
+			return false;
 		}
-		return ret;
 
+		return writeAndWaitForSent(buf);
+	}
+
+	static bool writePayloadWithAck(uint8_t* const buf, const int size, uint8_t destination_node)
+	{
+		if(false == waitForReadyToSend()){
+			return false;
+		}
+
+		bool ret = false;
+		for(int i = 0; i <= ACK_RETRIES; ++i) {
+			buildPacketHeader(size,destination_node,NOACK);
+			writeAndWaitForSent(buf);
+			enableRx();
+			while(false == mPayloadReady) {
+				_sys::delayInUs(100);
+				if(++i > ACK_TIMEOUT) {
+					break;
+				}
+			}
+			readPayload(nullptr,0);
+			if(SEND_ACK == mPacketHeader.Control && destination_node == mPacketHeader.Source){
+				ret = true;
+				break;
+			}
+		}
+
+		return ret;
 	}
 
 	//.5dB steps where RSSI = RssiValue/2 dBm
@@ -158,6 +183,13 @@ private:
 		}
 	}
 
+	static bool writeAndWaitForSent(uint8_t* const buf)
+	{
+		rfm69_comm::writePacket(mPacketHeader,buf);
+		enableTx();
+		return waitForPacketSent();
+	}
+
 	static void forceRestartRx()
 	{
 		rfm69_comm::writeRegisterPacketConfig2(rfm69_comm::readRegisterPacketConfig2() | RF_PACKET2_RXRESTART);
@@ -223,7 +255,6 @@ private:
 		static const uint32_t timeOut = 500;
 		uint32_t currentTime = _sys::millis();
 
-		forceRestartRx();
 		enableRx();
 		while(false == checkRxRssiLimit()) {
 			if(currentTime + timeOut < _sys::millis()) {
