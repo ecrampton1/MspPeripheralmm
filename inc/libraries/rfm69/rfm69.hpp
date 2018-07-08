@@ -58,6 +58,13 @@ public:
 		int length = rfm69_comm::readPacket(mPacketHeader,buf,size);
 		if(0 > length) {
 			forceRestartRx();
+			return length;
+		}
+
+		if(REQUEST_ACK == mPacketHeader.Control){
+			buildPacketHeader(0,mPacketHeader.Source,SEND_ACK);
+			if(false == waitForReadyToSend()) { _uart::sendLine("Fails 1"); }
+			if(false == writeAndWaitForSent(nullptr)) { _uart::sendLine("Fails 2"); }
 		}
 
 		return length;
@@ -67,7 +74,7 @@ public:
 	//TODO add timeout and noAck
 	static bool writePayload(uint8_t* const buf, const int size, uint8_t destination_node)
 	{
-		buildPacketHeader(size,destination_node,NOACK);
+		buildPacketHeader(size,destination_node,NO_ACK);
 
 		if(false == waitForReadyToSend()){
 			return false;
@@ -83,16 +90,22 @@ public:
 		}
 
 		bool ret = false;
-		for(int i = 0; i <= ACK_RETRIES; ++i) {
-			buildPacketHeader(size,destination_node,NOACK);
+		for(int i = 0; i < ACK_RETRIES; ++i) {
+			waitForReadyToSend();
+			buildPacketHeader(size,destination_node,REQUEST_ACK);
 			writeAndWaitForSent(buf);
 			enableRx();
+			int j = 0;
 			while(false == mPayloadReady) {
-				_sys::delayInUs(100);
-				if(++i > ACK_TIMEOUT) {
+				_sys::delayInUs(1000);
+				if(++j > ACK_TIMEOUT) {
 					break;
 				}
 			}
+			if(j > ACK_TIMEOUT) {continue;}
+			_uart::send("Received");
+			_uart::send(mPacketHeader.Control);
+			_uart::sendLine();
 			readPayload(nullptr,0);
 			if(SEND_ACK == mPacketHeader.Control && destination_node == mPacketHeader.Source){
 				ret = true;
@@ -107,12 +120,13 @@ public:
 	static int readRssi(bool forceReading=false)
 	{
 		int reading = 0;
-		if(false == forceReading) {
+		if(true == forceReading) {
 			rfm69_comm::writeRegisterRssiConfig(RF_RSSI_START);
 			while(false == isRssiReady());
 		}
 		reading = rfm69_comm::readRegisterRssiValue();
 		reading = -reading>>1;
+		_uart::send(reading);
 		return reading;
 	}
 
@@ -257,6 +271,7 @@ private:
 
 		enableRx();
 		while(false == checkRxRssiLimit()) {
+			forceRestartRx();
 			if(currentTime + timeOut < _sys::millis()) {
 				return false; //Something not quite right.
 			}
@@ -274,7 +289,7 @@ private:
 	{
 		bool ret = false;
 		static constexpr int channelRssiLimit = -100;
-		if(isRxEnabled() && readRssi(true) < channelRssiLimit) {
+		if(isRxEnabled() && (readRssi() < channelRssiLimit)) {
 			ret = true;
 		}
 		return ret;

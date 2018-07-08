@@ -49,7 +49,7 @@ enum class CarrierFrequency
 	FREQUENCY_915
 };
 
-constexpr uint8_t NOACK = 0x00;
+constexpr uint8_t NO_ACK = 0x00;
 constexpr uint8_t REQUEST_ACK = 0x01;
 constexpr uint8_t SEND_ACK = 0x80;
 
