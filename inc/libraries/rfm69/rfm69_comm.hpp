@@ -61,7 +61,7 @@ struct PacketHeader
 	uint8_t Control;
 };
 
-template< class _spi, class _cs, CarrierFrequency _freq, uint8_t _network, class _uart>
+template< class _spi, class _cs, CarrierFrequency _freq, class _uart>
 class Rfm69Comm
 {
 public:
@@ -115,7 +115,7 @@ public:
 		///* 0x2D */ { REG_PREAMBLELSB, RF_PREAMBLESIZE_LSB_VALUE } // default 3 preamble bytes 0xAAAAAA
 		writeRegisterSyncConfig( RF_SYNC_ON | RF_SYNC_FIFOFILL_AUTO | RF_SYNC_SIZE_2 | RF_SYNC_TOL_0 );
 		writeRegisterSyncValue1( Rfm69DefaultSync );
-		writeRegisterSyncValue2( _network ); // NETWORK ID
+		writeRegisterSyncValue2( 100 ); // DEFAULT NETWORK ID
 		writeRegisterPacketConfig1( RF_PACKET1_FORMAT_VARIABLE | RF_PACKET1_DCFREE_OFF | RF_PACKET1_CRC_ON | RF_PACKET1_CRCAUTOCLEAR_ON | RF_PACKET1_ADRSFILTERING_OFF );
 		///* 0x38 */ { REG_PAYLOADLENGTH, 66 }, // in variable length mode: the max frame size, not used in TX DEFAULT is 0x40
 		///* 0x39 */ { REG_NODEADRS, nodeID }, // turned off because we're not using address filtering
@@ -236,11 +236,7 @@ public:
 		header.Source = _spi::exchange( DUMMY_BYTE );
 		header.Control = _spi::exchange( DUMMY_BYTE );
 
-
 		int payloadLength = header.Length - sizeof(header);
-		if(payloadLength > size){
-			return -1;
-		}
 		for(int i = 0; i < payloadLength; ++i)
 		{
 			ret_buf[i] = _spi::exchange( DUMMY_BYTE );

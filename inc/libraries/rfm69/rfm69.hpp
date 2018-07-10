@@ -4,19 +4,19 @@
 #include <string.h>
 
 static constexpr uint8_t ACK_RETRIES = 5;
-static constexpr uint8_t ACK_TIMEOUT = 25;
+static constexpr uint8_t ACK_TIMEOUT = 10;
 //TODO in general better timeout handling and fault handling in this class start with while loop timeouts.
 
-template< class _spi, class _sys,  class _cs, class _irq, CarrierFrequency _freq, uint8_t _node, uint8_t _network, class _uart>
+template< class _spi, class _sys,  class _cs, class _irq, CarrierFrequency _freq, class _uart>
 class Rfm69
 {
-	using rfm69_comm = Rfm69Comm< _spi, _cs, _freq, _network, _uart >;
+	using rfm69_comm = Rfm69Comm< _spi, _cs, _freq, _uart >;
 
 public:
 	static void init()
 	{
 		rfm69_comm::init();
-		setNodeAddress(_node);
+		setNodeAddress(99);
 		waitForModeReady();
 		configInterrupt();
 		mPayloadReady = false;
@@ -44,27 +44,41 @@ public:
 		return mNode;
 	}
 
+	static void setNetworkAddress(uint8_t address)
+	{
+		rfm69_comm::writeRegisterSyncValue2(address);
+		mNode = address;
+	}
+
+	static uint8_t getNetworkAddress()
+	{
+		mNode = rfm69_comm::readRegisterSyncValue2();
+		return mNode;
+	}
+
 	static bool isPayloadReady()
 	{
 		return mPayloadReady;
 	}
 
-	static int readPayload(uint8_t* buf, const int size)
+	static PacketHeader readPayload(uint8_t* buf, const int size)
 	{
+		PacketHeader header;
 		//disable interrupts?
 		mPayloadReady = false;
 		enableStandby();
-		int length = rfm69_comm::readPacket(mPacketHeader,buf,size);
+		int length = rfm69_comm::readPacket(header,buf,size);
 		if(0 > length) {
 			forceRestartRx();
-			return length;
+			header.Length = 0;
+			return header;
 		}
 
-		if(REQUEST_ACK == mPacketHeader.Control){
-			writePayload(buf,size,mPacketHeader.Source,SEND_ACK);
+		if(REQUEST_ACK == header.Control){
+			writePayload(buf,0,header.Source,SEND_ACK);
 		}
 
-		return length;
+		return header;
 
 	}
 
@@ -75,13 +89,13 @@ public:
 
 	static bool writePayload(uint8_t* const buf, const int size, uint8_t destination_node, uint8_t control)
 	{
-		buildPacketHeader(size,destination_node,control);
+		PacketHeader header;
+		buildPacketHeader(header,size,destination_node,control);
 
 		if(false == waitForReadyToSend()){
 			return false;
 		}
-
-		return writeAndWaitForSent(buf);
+		return writeAndWaitForSent(header,buf);
 	}
 
 	static bool writePayloadWithAck(uint8_t* const buf, const int size, uint8_t destination_node)
@@ -102,8 +116,8 @@ public:
 				}
 			}
 			if(j > ACK_TIMEOUT) {continue;}
-			readPayload(nullptr,0);
-			if(SEND_ACK == mPacketHeader.Control && destination_node == mPacketHeader.Source){
+			auto header = readPayload(nullptr,0);
+			if(SEND_ACK == header.Control && destination_node == destination_node){
 				ret = true;
 				break;
 			}
@@ -122,7 +136,6 @@ public:
 		}
 		reading = rfm69_comm::readRegisterRssiValue();
 		reading = -reading>>1;
-		_uart::send(reading);
 		return reading;
 	}
 
@@ -167,12 +180,12 @@ public:
 
 private:
 
-	static void buildPacketHeader(const int size, uint8_t desitnation_node, uint8_t control)
+	static void buildPacketHeader(PacketHeader& header, const int size, uint8_t desitnation_node, uint8_t control)
 	{
-		mPacketHeader.Source = mNode;
-		mPacketHeader.Destination = desitnation_node;
-		mPacketHeader.Length = size + sizeof(mPacketHeader);
-		mPacketHeader.Control = control;
+		header.Source = mNode;
+		header.Destination = desitnation_node;
+		header.Length = size + sizeof(header);
+		header.Control = control;
 	}
 
 	static void configInterrupt()
@@ -223,9 +236,9 @@ private:
 		rfm69_comm::writeRegisterOpMode((rfm69_comm::readRegisterOpMode() & 0xE3) | RF_OPMODE_STANDBY);
 	}
 
-	static bool writeAndWaitForSent(uint8_t* const buf)
+	static bool writeAndWaitForSent(PacketHeader& header,uint8_t* const buf)
 	{
-		rfm69_comm::writePacket(mPacketHeader,buf);
+		int i = rfm69_comm::writePacket(header,buf);
 		enableTx();
 		return waitForPacketSent();
 	}
@@ -274,9 +287,6 @@ private:
 		}
 
 		enableStandby();
-		if(false == waitForModeReady()) {
-			return false; //Something not quite right.
-		}
 
 		return true;
 	}
@@ -292,19 +302,17 @@ private:
 	}
 
 
-	static PacketHeader mPacketHeader;
 	static char mEncryptKey[16];
 	static bool mPayloadReady;
 	static uint8_t mNode;
 };
 
-template< class _spi, class _sys,  class _cs, class _irq, CarrierFrequency _freq, uint8_t _node, uint8_t _network, class _uart>
-PacketHeader Rfm69<_spi, _sys, _cs, _irq, _freq, _node,_network, _uart>::mPacketHeader;
-template< class _spi, class _sys,  class _cs, class _irq, CarrierFrequency _freq, uint8_t _node, uint8_t _network, class _uart>
-bool Rfm69<_spi, _sys, _cs, _irq, _freq, _node,_network, _uart>::mPayloadReady = false;
-template< class _spi, class _sys,  class _cs, class _irq, CarrierFrequency _freq, uint8_t _node, uint8_t _network, class _uart>
-char Rfm69<_spi, _sys, _cs, _irq, _freq, _node,_network, _uart>::mEncryptKey[16] = { 0 };
-template< class _spi, class _sys,  class _cs, class _irq, CarrierFrequency _freq, uint8_t _node, uint8_t _network, class _uart>
-uint8_t Rfm69<_spi, _sys, _cs, _irq, _freq, _node,_network, _uart>::mNode = 0xFF;
+template< class _spi, class _sys,  class _cs, class _irq, CarrierFrequency _freq,  class _uart>
+bool Rfm69<_spi, _sys, _cs, _irq, _freq,  _uart>::mPayloadReady = false;
+template< class _spi, class _sys,  class _cs, class _irq, CarrierFrequency _freq,  class _uart>
+char Rfm69<_spi, _sys, _cs, _irq, _freq, _uart>::mEncryptKey[16] = { 0 };
+template< class _spi, class _sys,  class _cs, class _irq, CarrierFrequency _freq, class _uart>
+uint8_t Rfm69<_spi, _sys, _cs, _irq, _freq, _uart>::mNode = 0xFF;
+
 
 #endif
