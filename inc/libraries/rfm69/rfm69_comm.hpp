@@ -59,7 +59,7 @@ struct PacketHeader
 	uint8_t Destination;
 	uint8_t Source;
 	uint8_t Control;
-};
+} __attribute__((packed));
 
 template< class _spi, class _cs, CarrierFrequency _freq, class _uart>
 class Rfm69Comm
@@ -219,30 +219,24 @@ public:
 	READ_8BIT_REGISTER( RssiValue, REG_RSSIVALUE )
 	READ_8BIT_REGISTER( PacketConfig2, REG_PACKETCONFIG2 )
 
-	static int readPacket(PacketHeader& header,uint8_t* ret_buf,const int size)
+	static int readPacket(uint8_t* ret_buf,const int max_size)
 	{
 		_cs::clear();
 		_spi::send( static_cast<uint8_t>(REG_FIFO) );
 		//This is actually the length of the payload in FIFO
-		header.Length = _spi::exchange( DUMMY_BYTE );
-
+		ret_buf[0]= _spi::exchange( DUMMY_BYTE );
 		//sanity check that our buffer size can handle this and its not 0
-		if(header.Length < sizeof(header)) {
+		if(ret_buf[0] < sizeof(PacketHeader) || ret_buf[0] > max_size) {
 			_cs::set();
 			return -1;
 		}
 
-		header.Destination = _spi::exchange( DUMMY_BYTE );
-		header.Source = _spi::exchange( DUMMY_BYTE );
-		header.Control = _spi::exchange( DUMMY_BYTE );
-
-		int payloadLength = header.Length - sizeof(header);
-		for(int i = 0; i < payloadLength; ++i)
+		for(int i = 1; i <= ret_buf[0]; ++i)
 		{
 			ret_buf[i] = _spi::exchange( DUMMY_BYTE );
 		}
 		_cs::set();
-		return payloadLength;
+		return ret_buf[0];
 	}
 
 	static uint8_t readRegister(uint8_t address)

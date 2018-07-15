@@ -3,6 +3,7 @@
 
 #include "mcu_sys.hpp"
 #include <msp430.h>
+#include "msp430/msp_gpio.hpp"
 
 extern volatile uint32_t mWatchDogCounter;
 
