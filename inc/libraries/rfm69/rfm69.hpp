@@ -104,6 +104,7 @@ public:
 		PacketHeader header;
 		for(int i = 0; i < ACK_RETRIES; ++i) {
 			writePayload(buf,size,destination_node,REQUEST_ACK);
+			_uart::sendLine("WP");
 			enableRx();
 			int j = 0;
 			while(false == mPayloadReady && ++j < ACK_TIMEOUT) {
