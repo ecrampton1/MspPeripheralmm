@@ -2,12 +2,13 @@
 #include "msp430/msp_spi.hpp"
 #include "msp430/msp_periph.hpp"
 #include "msp430/msp_gpio.hpp"
+#include "msp430/msp_timer.hpp"
 
 namespace McuPeripheral {
 
 
 #if defined( UARTA0_ENABLE_INT ) || defined( UARTB0_ENABLE_INT )
-__attribute__((__interrupt__(USCIAB0TX_VECTOR))) void USCIAB0_Tx(void)
+__attribute__((interrupt(USCIAB0TX_VECTOR))) void USCIAB0_Tx(void)
 {
 	uint8_t data;
 	bool popped = UartA0_Irq::mTxBuffer.pop(data);
@@ -20,7 +21,7 @@ __attribute__((__interrupt__(USCIAB0TX_VECTOR))) void USCIAB0_Tx(void)
 }
 
 
-__attribute__((__interrupt__(USCIAB0RX_VECTOR))) void USCIAB0_Rx(void)
+__attribute__((interrupt(USCIAB0RX_VECTOR))) void USCIAB0_Rx(void)
 {
 	uint8_t data = UCA0RXBUF;
 	if(UartA0_Irq::mRxBuffer.full()) {
@@ -39,7 +40,7 @@ __attribute__((__interrupt__(USCIAB0RX_VECTOR))) void USCIAB0_Rx(void)
 
 
 #if defined( PORT1_P0_ENABLE_INT) || defined( PORT1_P1_ENABLE_INT) || defined( PORT1_P2_ENABLE_INT) || defined( PORT1_P3_ENABLE_INT) || defined( PORT1_P4_ENABLE_INT) || defined( PORT1_P5_ENABLE_INT) || defined( PORT1_P6_ENABLE_INT) || defined( PORT1_P7_ENABLE_INT)
-__attribute__((__interrupt__(PORT1_VECTOR))) void PORT1_Irq(void)
+__attribute__((interrupt(PORT1_VECTOR))) void PORT1_Irq(void)
 {
 	uint8_t flag = P1IFG;
 	uint8_t enabled = P1IE;
@@ -73,7 +74,7 @@ __attribute__((__interrupt__(PORT1_VECTOR))) void PORT1_Irq(void)
 #endif
 
 #if defined( PORT2_P0_ENABLE_INT) || defined( PORT2_P1_ENABLE_INT) || defined( PORT2_P2_ENABLE_INT) || defined( PORT2_P3_ENABLE_INT) || defined( PORT2_P4_ENABLE_INT) || defined( PORT2_P5_ENABLE_INT) || defined( PORT2_P6_ENABLE_INT) || defined( PORT2_P7_ENABLE_INT)
-__attribute__((__interrupt__(PORT2_VECTOR))) void PORT2_Irq(void)
+__attribute__((interrupt(PORT2_VECTOR))) void PORT2_Irq(void)
 {
 	uint8_t flag = P2IFG;
 	uint8_t enabled = P2IE;
@@ -107,4 +108,39 @@ __attribute__((__interrupt__(PORT2_VECTOR))) void PORT2_Irq(void)
 #endif
 
 #undef PIN_INTERRUPT_HANDLER
+
+
+#ifdef TIMER0_ENABLE_INT
+__attribute__((interrupt(TIMER0_A1_VECTOR))) void Timer0_A1(void)
+{
+	switch( TAIV )
+	{
+		case  2: break;                          // CCR1 not used yet
+		case  4: break;                          // CCR2 not used yet
+		case 10:           				// overflow
+			TimerControl<TACTL_, TAR_, TAIV_, TACCTL0_, TACCTL1_, TACCTL2_, TACCR0_, TACCR1_, TACCR2_>::mTimerHandler(TimerControl<TACTL_, TAR_, TAIV_, TACCTL0_, TACCTL1_, TACCTL2_, TACCR0_, TACCR1_, TACCR2_>::mTimerArgs);
+			break;
+		default:
+			break;
+	}
+
+}
+#endif
+
+#ifdef TIMER1_ENABLE_INT
+__attribute__((interrupt(TIMER1_A1_VECTOR))) void Timer1_A1(void)
+{
+	switch( TA1IV )
+	{
+		case  2: break;                          // CCR1 not used yet
+		case  4: break;                          // CCR2 not used yet
+		case 10:            				// overflow
+			TimerControl<TA1CTL_, TA1R_, TA1IV_, TA1CCTL0_, TA1CCTL1_, TA1CCTL2_,TA1CCR0_, TA1CCR1_, TA1CCR2_>::mTimerHandler(TimerControl<TACTL_, TAR_, TAIV_, TACCTL0_, TACCTL1_, TACCTL2_, TACCR0_, TACCR1_, TACCR2_>::mTimerArgs);
+			break;
+		default:
+			break;
+	}
+
+}
+#endif
 }

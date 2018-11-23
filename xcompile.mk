@@ -5,18 +5,17 @@ SHELL := /bin/bash
 # The user should take care of putting the tools in the path...
 TOOLS_PREFIX := msp430-elf-
 #TOOLS_PATH   := $(dir $(shell which $(TOOLS_PREFIX)g++))
-#TOOLS_PATH   := /opt/gcc-msp430-elf-dev-20160217/bin/
-#TOOLS_PATH   := /opt/gcc-msp430-elf-dev-20160407/bin/
-#TOOLS_PATH   := /opt/gcc-msp430-elf-dev-20161016/bin/
-TOOLS_PATH   := /opt/gcc-msp430-elf-dev-20161112/bin/
+TOOLS_PATH   := /usr/local/msp430/bin/
+#TOOLS_PATH   := /home/eddie/gcc_msp430_build_2/msp430-gcc-7.3.1.24-source-patches/install/usr/local/bin/
+
 
 # Compiler/linker flags to sepcify CPU
 MMCU := msp430g2553
-CPU_FLAGS   := -mmcu=$(MMCU) -Os -Wall -g -s -Wno-main -pedantic -Wreturn-type -Wunused -fdata-sections -ffunction-sections -fwrapv -fomit-frame-pointer -fno-exceptions 
+CPU_FLAGS   := -mmcu=$(MMCU) -Os -Wall -s -Wno-main -pedantic -Wreturn-type -Wunused -fdata-sections -ffunction-sections -fwrapv -fomit-frame-pointer -fno-exceptions 
 #CPU_FLAGS   := -mmcu=$(MMCU) -Wall -minrt -pedantic -Wreturn-type -Wunused -g -MMD -fwrapv -fomit-frame-pointer -fno-exceptions
 
 
-LDSCRIPTS   := $(TOOLS_PATH)../msp430-elf/include/$(MMCU).ld
+LDSCRIPTS   := $(TOOLS_PATH)../msp430-elf/lib/$(MMCU).ld
 #SYSINCLUDE  := $(TOOLS_PATH)/include
 
 CXXFLAGS    := -std=c++11 $(CPU_FLAGS) -lstdc++
