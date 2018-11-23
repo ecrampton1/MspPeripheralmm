@@ -47,13 +47,11 @@ public:
 	static void setNetworkAddress(uint8_t address)
 	{
 		rfm69_comm::writeRegisterSyncValue2(address);
-		mNode = address;
 	}
 
 	static uint8_t getNetworkAddress()
 	{
-		mNode = rfm69_comm::readRegisterSyncValue2();
-		return mNode;
+		return rfm69_comm::readRegisterSyncValue2();
 	}
 
 	static bool isPayloadReady()
@@ -61,24 +59,23 @@ public:
 		return mPayloadReady;
 	}
 
-	static PacketHeader readPayload(uint8_t* buf, const int size)
+	static int readPayload(uint8_t* ret_buf, const int max_size)
 	{
-		PacketHeader header;
 		//disable interrupts?
+		PacketHeader* header = reinterpret_cast<PacketHeader*>(ret_buf);
 		mPayloadReady = false;
 		enableStandby();
-		int length = rfm69_comm::readPacket(header,buf,size);
+		int length = rfm69_comm::readPacket(ret_buf,max_size);
 		if(0 > length) {
 			forceRestartRx();
-			header.Length = 0;
-			return header;
+			return -1;
 		}
 
-		if(REQUEST_ACK == header.Control){
-			writePayload(buf,0,header.Source,SEND_ACK);
+		if(REQUEST_ACK == header->Control){
+			writePayload(nullptr,0,header->Source,SEND_ACK);
 		}
 
-		return header;
+		return header->Length;
 
 	}
 
@@ -103,26 +100,23 @@ public:
 		if(false == waitForReadyToSend()){
 			return false;
 		}
-
 		bool ret = false;
+		PacketHeader header;
 		for(int i = 0; i < ACK_RETRIES; ++i) {
 			writePayload(buf,size,destination_node,REQUEST_ACK);
+			_uart::sendLine("WP");
 			enableRx();
 			int j = 0;
-			while(false == mPayloadReady) {
-				_sys::delayInUs(1000);
-				if(++j > ACK_TIMEOUT) {
-					break;
-				}
+			while(false == mPayloadReady && ++j < ACK_TIMEOUT) {
+				_sys::delayInMs(1);
 			}
 			if(j > ACK_TIMEOUT) {continue;}
-			auto header = readPayload(nullptr,0);
-			if(SEND_ACK == header.Control && destination_node == destination_node){
+			readPayload(reinterpret_cast<uint8_t*>(&header),sizeof(header));
+			if(SEND_ACK == header.Control && destination_node == header.Source){
 				ret = true;
 				break;
 			}
 		}
-
 		return ret;
 	}
 
@@ -260,7 +254,7 @@ private:
 		int i = 0;
 
 		while(0 == (rfm69_comm::readRegisterIrqFlags2() & RF_IRQFLAGS2_PACKETSENT)) {
-			_sys::delayInUs(1000);
+			_sys::delayInMs(1);
 			if(++i > 500) {
 				return false;
 			}
@@ -275,13 +269,12 @@ private:
 
 	static bool waitForReadyToSend()
 	{
-		static const uint32_t timeOut = 500;
-		uint32_t currentTime = _sys::millis();
+		const uint32_t timeOut = 500 + _sys::millis();
 
 		enableRx();
 		while(false == checkRxRssiLimit()) {
 			forceRestartRx();
-			if(currentTime + timeOut < _sys::millis()) {
+			if(timeOut < _sys::millis()) {
 				return false; //Something not quite right.
 			}
 		}

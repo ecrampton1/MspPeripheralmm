@@ -1,12 +1,11 @@
 #ifndef _MSP_UART_HPP
 #define _MSP_UART_HPP
 #include "mcu_uart.hpp"
-#include "msp_periph.hpp"
 #include "utilities/utilities.hpp"
 #include <stdint.h>
 #include <msp430.h>
-#include "msp_sys.hpp"
-#include "msp_gpio.hpp"
+#include "msp430/msp_sys.hpp"
+#include "msp430/msp_gpio.hpp"
 #include "utilities/circfifo.hpp"
 #include <math.h>
 #include "msp430/msp_periph.hpp"
@@ -175,11 +174,12 @@ public:
 		}
 	}
 
-	static const void sendLine(const char* data=0)
+	static const void sendLine(const char* data=nullptr)
 	{
-		if(data != 0)
+		if(data != nullptr) {
 			send(data);
-		send("\n");
+		}
+		_uart::queueByte('\n');
 	}
 
 	static const bool readByte(uint8_t& data)
