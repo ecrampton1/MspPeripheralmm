@@ -70,7 +70,7 @@ void McuSystem<Speed::SPEED_16MHZ>::delayInUs(uint32_t time)
 }
 
 
-__attribute__((__interrupt__(WDT_VECTOR)))
+__attribute__((interrupt(WDT_VECTOR)))
 void watchDog (void)
 //#pragma vector=WDT_VECTOR
 //__attribute__((__interrupt__)) void watchDog(void)

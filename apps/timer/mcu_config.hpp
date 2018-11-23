@@ -11,7 +11,7 @@ namespace Periph = McuPeripheral;
 
 #define  uart_rx BIT1
 #define  uart_tx BIT2
-constexpr Speed clock_speed = Speed::SPEED_1MHZ;
+constexpr Speed clock_speed = Speed::SPEED_16MHZ;
 
 using led0 =  Periph::McuPin<McuPort1,BIT0>;
 using led1 =  Periph::McuPin<McuPort1,BIT6>;

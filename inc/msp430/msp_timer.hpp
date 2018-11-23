@@ -135,9 +135,6 @@ public:
 
 	static bool is_running() { return ( *((volatile uint16_t*)_control) & MC_3 ) > 0; }
 
-	static __attribute__((__interrupt__)) void Timer_A1(void);
-	static __attribute__((__interrupt__)) void Timer_A0(void);
-
 };
 
 
@@ -210,6 +207,11 @@ template<TimerSource _source, class _timer, uint64_t _microSeconds, int32_t _clo
 uint32_t McuTimer< _source, _timer, _microSeconds, _clock>::mRollOverCount;
 template<TimerSource _source, class _timer, uint64_t _microSeconds, int32_t _clock >
 uint16_t McuTimer< _source, _timer, _microSeconds, _clock>::mTimerCCR0Count;
+template<uint16_t _control, uint16_t _counter, uint16_t _interrupt, uint16_t _ccc0, uint16_t _ccc1, uint16_t _ccc2, uint16_t _ccr0, uint16_t _ccr1, uint16_t _ccr2 >
+void* McuPeripheral::TimerControl<_control,_counter,_interrupt,_ccc0,_ccc1, _ccc2,_ccr0,_ccr1,_ccr2>::mTimerArgs;
+
+template<uint16_t _control, uint16_t _counter, uint16_t _interrupt, uint16_t _ccc0,uint16_t _ccc1, uint16_t _ccc2, uint16_t _ccr0, uint16_t _ccr1, uint16_t _ccr2 >
+McuPeripheral::callback_t McuPeripheral::TimerControl<_control,_counter,_interrupt,_ccc0,_ccc1, _ccc2,_ccr0,_ccr1,_ccr2>::mTimerHandler;
 
 
 
@@ -219,6 +221,6 @@ uint16_t McuTimer< _source, _timer, _microSeconds, _clock>::mTimerCCR0Count;
 using Timer_Source = McuPeripheral::TimerSource;
 using Timer_Mode = McuPeripheral::TimerMode;
 using Timer0 = McuPeripheral::TimerControl<TACTL_, TAR_, TAIV_, TACCTL0_, TACCTL1_, TACCTL2_, TACCR0_, TACCR1_, TACCR2_>;
-//using Timer1 = McuPeripheral::TimerControl<TA1CTL_, TA1R_, TA1IV_, TA1CCTL0_, TA1CCTL1_, TA1CCTL2_, TA1CCR0_, TA1CCR1_, TA1CCR2_>;
+using Timer1 = McuPeripheral::TimerControl<TA1CTL_, TA1R_, TA1IV_, TA1CCTL0_, TA1CCTL1_, TA1CCTL2_, TA1CCR0_, TA1CCR1_, TA1CCR2_>;
 
 #endif //_MSP_TIMER_HPP
