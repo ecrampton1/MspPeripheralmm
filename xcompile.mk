@@ -11,7 +11,7 @@ TOOLS_PATH   := /usr/local/msp430/bin/
 
 # Compiler/linker flags to sepcify CPU
 MMCU := msp430g2553
-CPU_FLAGS   := -mmcu=$(MMCU) -Os -Wall -s -Wno-main -pedantic -Wreturn-type -Wunused -fdata-sections -ffunction-sections -fwrapv -fomit-frame-pointer -fno-exceptions 
+CPU_FLAGS   := -mmcu=$(MMCU) -Os -g -Wall -s -Wno-main -pedantic -Wreturn-type -Wunused -fdata-sections -ffunction-sections -fwrapv -fomit-frame-pointer -fno-exceptions 
 #CPU_FLAGS   := -mmcu=$(MMCU) -Wall -minrt -pedantic -Wreturn-type -Wunused -g -MMD -fwrapv -fomit-frame-pointer -fno-exceptions
 
 

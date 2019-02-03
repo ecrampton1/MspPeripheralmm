@@ -9,9 +9,9 @@ static uint8_t buffer[66];
 
 
 struct Payload {
-  int           nodeId; //store this nodeId
-  unsigned long uptime; //uptime in ms
-  unsigned long         temp;   //temperature maybe?
+  int16_t           nodeId; //store this nodeId
+  uint32_t uptime; //uptime in ms
+  uint32_t         temp;   //temperature maybe?
 };
 
 void setup()
@@ -26,7 +26,7 @@ void setup()
 	//rfm69::setEncryptionKey(AesKey);
 	rfm69::enableRx();
 	rfm69::printAllRegisters();
-	rfm69::setNodeAddress(99);
+	rfm69::setNodeAddress(75);
 	rfm69::setNetworkAddress(100);
 }
 
@@ -65,9 +65,9 @@ void sender()
 void loop()
 {
 
-	receiver();
-	//sender();
-	//sys::delayInMs(100);
+	//receiver();
+	sender();
+	sys::delayInMs(500);
 
 }
 

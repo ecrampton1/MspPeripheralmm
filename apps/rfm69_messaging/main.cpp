@@ -6,7 +6,7 @@
 
 
 
-#define PINGER
+//#define PINGER
 //McuPeripheral::SystemTime StartTime;
 
 using Handler = PeripheralMessages::RFM69Handler;
@@ -14,10 +14,10 @@ using Handler = PeripheralMessages::RFM69Handler;
 #ifdef PINGER
 //unfortunately malloc doesnt work on msp430, still even after compiling newlib...
 static uint8_t ping_buffer[8];
-static PeripheralMessages::PingPongDataMsg ping(ping_buffer,sizeof(ping_buffer),true);
+static PeripheralMessages::PingPongQueryMsg ping(ping_buffer,sizeof(ping_buffer),true);
 #else
 static uint8_t pong_buffer[8];
-static PeripheralMessages::PingPongQueryMsg pong(pong_buffer,sizeof(pong_buffer),true);
+static PeripheralMessages::PingPongDataMsg pong(pong_buffer,sizeof(pong_buffer),true);
 #endif
 
 uint16_t FailCount;
@@ -25,10 +25,13 @@ uint16_t FailCount;
 
 uint8_t PongerAddress = 9;
 uint8_t PingerAddress = 10;
+static Periph::SystemTime TimeSinceSent = 0;
+static constexpr Periph::SystemTime TIMEOUT = 5000;
 
 #ifdef PINGER
 void handle_pong(void* args, void*  msg, uint16_t calling_id)
 {
+	PRINT("pong\n")
 	PeripheralMessages::PingPongDataMsg* pong_ptr =
 			static_cast<PeripheralMessages::PingPongDataMsg*>(msg);
 
@@ -36,17 +39,19 @@ void handle_pong(void* args, void*  msg, uint16_t calling_id)
 		led0::toggle();
 		++ping.get_message_payload()->count;
 	}
-
 	Handler::publish_message(ping,PongerAddress);
+	TimeSinceSent = sys::millis();
 }
 #else
 void handle_ping(void* args, void*  msg, uint16_t calling_id)
 {
+	PRINT("ping\n")
 	PeripheralMessages::PingPongQueryMsg* ping_ptr =
 			static_cast<PeripheralMessages::PingPongQueryMsg*>(msg);
 	pong.get_message_payload()->count = ping_ptr->get_message_payload()->count;
-	Handler::publish_message(pong);
 	led0::toggle();
+	//sys::delayInMs(2);
+	Handler::publish_message(pong,calling_id);
 }
 #endif
 
@@ -67,6 +72,7 @@ void setup() {
 	sys::init();
 	sys::enableWatchDog(); //starts counting for system time
 	led0::output();
+	led0::clear();
 	uart::init();
 	initializeIncomingMessages();
 #ifdef PINGER
@@ -74,6 +80,7 @@ void setup() {
 	ping.get_message_payload()->count = 0;
 	PRINT(".")
 	Handler::publish_message(ping,PongerAddress);
+	TimeSinceSent = sys::millis();
 #else
 	Handler::begin(PongerAddress);
 	PRINT("SETUP!\n")
@@ -87,7 +94,12 @@ void setup() {
 void loop() {
 
 	Handler::serviceOnce();
-
+#ifdef PINGER
+	if((TimeSinceSent + TIMEOUT) < sys::millis()){
+		Handler::publish_message(ping,PongerAddress);
+		TimeSinceSent = sys::millis();
+	}
+#endif
 }
 
 

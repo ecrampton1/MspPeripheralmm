@@ -2,6 +2,7 @@
 #define _RFM69_HPP
 #include "rfm69/rfm69_comm.hpp"
 #include <string.h>
+#include "msp430/msp_uart.hpp"
 
 static constexpr uint8_t ACK_RETRIES = 5;
 static constexpr uint8_t ACK_TIMEOUT = 10;
@@ -88,7 +89,6 @@ public:
 	{
 		PacketHeader header;
 		buildPacketHeader(header,size,destination_node,control);
-
 		if(false == waitForReadyToSend()){
 			return false;
 		}
@@ -97,6 +97,7 @@ public:
 
 	static bool writePayloadWithAck(uint8_t* const buf, const int size, uint8_t destination_node)
 	{
+
 		if(false == waitForReadyToSend()){
 			return false;
 		}
@@ -104,7 +105,6 @@ public:
 		PacketHeader header;
 		for(int i = 0; i < ACK_RETRIES; ++i) {
 			writePayload(buf,size,destination_node,REQUEST_ACK);
-			_uart::sendLine("WP");
 			enableRx();
 			int j = 0;
 			while(false == mPayloadReady && ++j < ACK_TIMEOUT) {
@@ -114,6 +114,7 @@ public:
 			readPayload(reinterpret_cast<uint8_t*>(&header),sizeof(header));
 			if(SEND_ACK == header.Control && destination_node == header.Source){
 				ret = true;
+				McuPeripheral::McuUart<UartA0, McuPeripheral::BaudRate::BAUD_115200, Speed::SPEED_16MHZ>::send("ACK Received\n");
 				break;
 			}
 		}
