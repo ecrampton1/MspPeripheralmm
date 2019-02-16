@@ -146,27 +146,27 @@ public:
 	}
 
 	template<class T>
-	static const void send( const T data, const Base base=Base::BASE_DEC )
+	static void send( const T data, const Base base=Base::BASE_DEC )
 	{
 		static char buf[sizeof(T)*4+1];
 		itoa(data,buf, base);
 		send(static_cast<const char*>(buf));
 	}
 
-	static const void send( float data, int precision=2)
+	static void send( float data, int precision=2)
 	{
 		//TODO implement (look into fixed point) ??
 
 	}
 
-	static const void send(uint8_t* const data,const  int numOfBytes)
+	static void send(uint8_t* const data,const  int numOfBytes)
 	{
 		for(int i = 0; i < numOfBytes; ++i) {
 			_uart::queueByte(data[i]);
 		}
 	}
 
-	static const void send(const char* data)
+	static void send(const char* data)
 	{
 		int i = 0;
 		while(data[i] != 0) {
@@ -174,7 +174,7 @@ public:
 		}
 	}
 
-	static const void sendLine(const char* data=nullptr)
+	static void sendLine(const char* data=nullptr)
 	{
 		if(data != nullptr) {
 			send(data);

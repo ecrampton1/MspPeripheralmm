@@ -6,6 +6,20 @@
 
 namespace McuPeripheral {
 
+#if 0
+__attribute__((interrupt(TRAPINT_VECTOR))) void TRAPINT_Irq(void)
+{
+    __no_operation();
+    while(1);
+}
+
+
+__attribute__((interrupt(NMI_VECTOR))) void NMI_Irq(void)
+{
+	__no_operation();
+	while(1);
+}
+#endif
 
 #if defined( UARTA0_ENABLE_INT ) || defined( UARTB0_ENABLE_INT )
 __attribute__((interrupt(USCIAB0TX_VECTOR))) void USCIAB0_Tx(void)

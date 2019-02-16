@@ -115,6 +115,10 @@ public:
 	{
 		return _pin;
 	}
+	static void clearIntFlag()
+	{
+		*((volatile uint8_t*)_port::mIntFlagReg) &= ~_pin;
+	}
 
 	static callback_t mPinHandler;
 	static callback_args_t mPinArgs;

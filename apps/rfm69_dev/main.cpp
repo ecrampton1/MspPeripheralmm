@@ -65,9 +65,9 @@ void sender()
 void loop()
 {
 
-	//receiver();
-	sender();
-	sys::delayInMs(500);
+	receiver();
+	//sender();
+	//sys::delayInMs(500);
 
 }
 

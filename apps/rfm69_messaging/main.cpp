@@ -33,12 +33,14 @@ void handle_pong(void* args, void*  msg, uint16_t calling_id)
 {
 	PRINT("pong\n")
 	PeripheralMessages::PingPongDataMsg* pong_ptr =
+
 			static_cast<PeripheralMessages::PingPongDataMsg*>(msg);
 
 	if(pong_ptr->get_message_payload()->count == ping.get_message_payload()->count) {
 		led0::toggle();
 		++ping.get_message_payload()->count;
 	}
+	sys::delayInMs(5);
 	Handler::publish_message(ping,PongerAddress);
 	TimeSinceSent = sys::millis();
 }
@@ -50,7 +52,7 @@ void handle_ping(void* args, void*  msg, uint16_t calling_id)
 			static_cast<PeripheralMessages::PingPongQueryMsg*>(msg);
 	pong.get_message_payload()->count = ping_ptr->get_message_payload()->count;
 	led0::toggle();
-	//sys::delayInMs(2);
+	sys::delayInMs(5);
 	Handler::publish_message(pong,calling_id);
 }
 #endif
@@ -98,6 +100,7 @@ void loop() {
 	if((TimeSinceSent + TIMEOUT) < sys::millis()){
 		Handler::publish_message(ping,PongerAddress);
 		TimeSinceSent = sys::millis();
+		PRINT("*\n")
 	}
 #endif
 }

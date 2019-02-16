@@ -55,7 +55,7 @@ constexpr uint8_t SEND_ACK = 0x80;
 
 struct PacketHeader
 {
-	uint8_t Length;
+	//uint8_t Length; Length is not included in packet
 	uint8_t Destination;
 	uint8_t Source;
 	uint8_t Control;
@@ -113,9 +113,11 @@ public:
 		writeRegisterIrqFlags2( RF_IRQFLAGS2_FIFOOVERRUN ); // writing to this bit ensures that the FIFO & status flags are reset
 		writeRegisterRssiThreshold( RSSILEVEL ); // must be set to dBm = (-Sensitivity / 2), default is 0xE4 = 228 so -114dBm
 		///* 0x2D */ { REG_PREAMBLELSB, RF_PREAMBLESIZE_LSB_VALUE } // default 3 preamble bytes 0xAAAAAA
-		writeRegisterSyncConfig( RF_SYNC_ON | RF_SYNC_FIFOFILL_AUTO | RF_SYNC_SIZE_2 | RF_SYNC_TOL_0 );
+		writeRegisterSyncConfig( RF_SYNC_ON | RF_SYNC_FIFOFILL_AUTO | RF_SYNC_SIZE_4 | RF_SYNC_TOL_0 );
 		writeRegisterSyncValue1( Rfm69DefaultSync );
-		writeRegisterSyncValue2( 100 ); // DEFAULT NETWORK ID
+		writeRegisterSyncValue2( Rfm69DefaultSync );
+		writeRegisterSyncValue3( Rfm69DefaultSync );
+		writeRegisterSyncValue4( 100 ); // DEFAULT NETWORK ID
 		writeRegisterPacketConfig1( RF_PACKET1_FORMAT_VARIABLE | RF_PACKET1_DCFREE_OFF | RF_PACKET1_CRC_ON | RF_PACKET1_CRCAUTOCLEAR_ON | RF_PACKET1_ADRSFILTERING_OFF );
 		///* 0x38 */ { REG_PAYLOADLENGTH, 66 }, // in variable length mode: the max frame size, not used in TX DEFAULT is 0x40
 		///* 0x39 */ { REG_NODEADRS, nodeID }, // turned off because we're not using address filtering
@@ -140,15 +142,16 @@ public:
 
 
 	//This writes a rfm69 specific packet using the FIFO, note you can send empty packets useful for acks
-	static int writePacket(PacketHeader& header, uint8_t* const buf=nullptr)
+	static int writePacket(PacketHeader& header,const uint8_t length=sizeof(PacketHeader), uint8_t* const buf=nullptr)
 	{
 		//I need to change REG defines to constexpr for better typing
 		uint8_t addr = REG_FIFO | WRITE_ACCESS;
 		_cs::clear();
 		_spi::send( addr );
+		_spi::send( length );
 		int i = _spi::send(reinterpret_cast<uint8_t*>(&header),sizeof(PacketHeader));
-		if(header.Length > sizeof(PacketHeader)) {
-			uint8_t userLength = header.Length - sizeof(PacketHeader);
+		if(length > sizeof(PacketHeader)) {
+			uint8_t userLength = length - sizeof(PacketHeader);
 			i = i + _spi::send(buf,userLength);
 		}
 		_cs::set();
@@ -186,6 +189,8 @@ public:
 	WRITE_8BIT_REGISTER( FreqDevLsb, REG_FDEVLSB )
 	WRITE_8BIT_REGISTER( SyncValue1, REG_SYNCVALUE1 )
 	WRITE_8BIT_REGISTER( SyncValue2, REG_SYNCVALUE2 )
+	WRITE_8BIT_REGISTER( SyncValue3, REG_SYNCVALUE3 )
+	WRITE_8BIT_REGISTER( SyncValue4, REG_SYNCVALUE4 )
 	WRITE_8BIT_REGISTER( FrfMsb, REG_FRFMSB )
 	WRITE_8BIT_REGISTER( FrfMid, REG_FRFMID )
 	WRITE_8BIT_REGISTER( FrfLsb, REG_FRFLSB )
@@ -221,22 +226,39 @@ public:
 
 	static int readPacket(uint8_t* ret_buf,const int max_size)
 	{
+
 		_cs::clear();
 		_spi::send( static_cast<uint8_t>(REG_FIFO) );
 		//This is actually the length of the payload in FIFO
-		ret_buf[0]= _spi::exchange( DUMMY_BYTE );
+		int length = _spi::exchange( DUMMY_BYTE );
 		//sanity check that our buffer size can handle this and its not 0
-		if(ret_buf[0] < sizeof(PacketHeader) || ret_buf[0] > max_size) {
-			_cs::set();
-			return -1;
+		if(length >= sizeof(PacketHeader) && length <= max_size) {
+			for(int i = 0; i <= length; ++i)//length is not include in the length count
+			{
+				ret_buf[i] = _spi::exchange( DUMMY_BYTE );
+			}
 		}
-
-		for(int i = 1; i <= ret_buf[0]; ++i)
-		{
-			ret_buf[i] = _spi::exchange( DUMMY_BYTE );
+		else{
+			for(int i = 1; i <= length; ++i)
+			{
+				_uart::send( _spi::exchange( DUMMY_BYTE) ,McuPeripheral::Base::BASE_HEX);
+			}
+			_uart::sendLine();
+			length = -1;
 		}
 		_cs::set();
-		return ret_buf[0];
+
+		while((readRegisterIrqFlags2() & RF_IRQFLAGS2_FIFONOTEMPTY))
+		{
+			_cs::clear();
+			_spi::send( static_cast<uint8_t>(REG_FIFO) );
+			_uart::send( _spi::exchange( DUMMY_BYTE) ,McuPeripheral::Base::BASE_HEX);
+			_cs::set();
+		}
+
+
+
+		return length;
 	}
 
 	static uint8_t readRegister(uint8_t address)
