@@ -69,14 +69,11 @@ public:
 		mPayloadReady = false;
 		int length = rfm69_comm::readPacket(ret_buf,max_size);
 		if(0 > length) {
-			_uart::sendLine("read");
 			forceRestartRx();
 			return -1;
 		}
 
 		if(REQUEST_ACK == header->Control){
-			//_uart::sendLine("wAck");
-			_sys::delayInMs(2);
 			writePayload(nullptr,0,header->Source,SEND_ACK);
 		}
 
@@ -121,18 +118,7 @@ public:
 			readPayload(buffer,sizeof(buffer));
 			if(SEND_ACK == header->Control && destination_node == header->Source){
 				ret = true;
-				_uart::sendLine("<---ACK");
 				break;
-			}
-			else {
-				_uart::send(buffer[0]);
-				_uart::send(" ");
-				_uart::send(buffer[1]);
-				_uart::send(" ");
-				_uart::send(buffer[2]);
-				_uart::send(" ");
-				_uart::send(buffer[3]);
-				_uart::sendLine("  Nack");
 			}
 		}
 		return ret;
@@ -178,7 +164,6 @@ public:
 	{
 		mPayloadReady = false;
 		if(isIrqPayloadReady()) {
-			_uart::send("RxPay\n");
 			forceRestartRx();
 		}
 		enablePayloadReadyIrq();
@@ -225,12 +210,6 @@ private:
 				enableStandby();
 			}
 		}
-		/*else
-		{
-			if( packetSent() ) {
-				mPacketSent = true;
-			}
-		}*/
 	}
 
 	static void enablePayloadReadyIrq()
@@ -313,7 +292,6 @@ private:
 		while(false == _irq::read()){
 			_sys::delayInUs(10);
 			if(++i > 500) {
-				_uart::sendLine("wSent");
 				return false;
 			}
 		}
@@ -333,7 +311,6 @@ private:
 		while(false == checkRxRssiLimit()) {
 			forceRestartRx();
 			if(timeOut < _sys::millis()) {
-				_uart::sendLine("wSend");
 				return false; //Something not quite right.
 			}
 		}
