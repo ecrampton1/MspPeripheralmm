@@ -8,7 +8,7 @@ APP_FLAGS := -DSMALL_MEMORY -DPORT1_P4_ENABLE_INT
 BUILD_SOURCES := $(mkfile_path)/main.cpp
 BUILD_SOURCES += external_libraries/PeripheralMessaging/src/message_handler.cpp
 BUILD_SOURCES += external_libraries/PeripheralMessaging/src/rfm69_message_handler.cpp
-BUILD_INC := $(mkfile_path) external_libraries/PeripheralMessaging/inc
+BUILD_INC := $(mkfile_path) external_libraries/PeripheralMessaging/inc external_libraries/RFM69/inc
 BUILD_SOURCE_DIRS := $(mkfile_path) external_libraries/PeripheralMessaging/src
 OBJ_DIR = $(mkfile_path)/obj
 
