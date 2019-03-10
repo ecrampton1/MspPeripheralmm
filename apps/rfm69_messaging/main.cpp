@@ -6,7 +6,7 @@
 
 
 
-#define PINGER
+//#define PINGER
 //McuPeripheral::SystemTime StartTime;
 
 using Handler = PeripheralMessages::RFM69Handler;
@@ -25,8 +25,6 @@ uint16_t FailCount;
 
 uint8_t PongerAddress = 9;
 uint8_t PingerAddress = 10;
-static Periph::SystemTime TimeSinceSent = 0;
-static constexpr Periph::SystemTime TIMEOUT = 500;
 
 #ifdef PINGER
 void handle_pong(void* args, void*  msg, uint16_t calling_id)
@@ -47,7 +45,7 @@ void handle_pong(void* args, void*  msg, uint16_t calling_id)
 #else
 void handle_ping(void* args, void*  msg, uint16_t calling_id)
 {
-	PRINT("ping\n")
+	PRINT("ping",ENDL)
 	PeripheralMessages::PingPongQueryMsg* ping_ptr =
 			static_cast<PeripheralMessages::PingPongQueryMsg*>(msg);
 	pong.get_message_payload()->count = ping_ptr->get_message_payload()->count;
@@ -85,7 +83,7 @@ void setup() {
 	TimeSinceSent = sys::millis();
 #else
 	Handler::begin(PongerAddress);
-	PRINT("SETUP!\n")
+	PRINT("SETUP!",ENDL)
 #endif
 
 

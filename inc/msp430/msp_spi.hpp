@@ -180,12 +180,13 @@ public:
 	static T exchange( const T data )
 	{
 		T return_data = 0;
+		uint16_t time_out = 0;
 
 		const uint8_t* data_ptr = &data;
 		uint8_t* ret_ptr = reinterpret_cast<uint8_t*>(&return_data);
 		for(uint16_t i = 0; i < sizeof(data); ++i) {
 			_spi::queueByte(data_ptr[i]);
-			while(_spi::isBusy());
+			while(_spi::isBusy() && (++time_out < 0xFFFF));
 			if(!_spi::readByte(ret_ptr[i]))
 				break;
 		}
@@ -260,12 +261,13 @@ private:
 	static T exchangeMSB(T data)
 	{
 		T return_data = 0;
+		uint16_t time_out = 0;
 
 		uint8_t* data_ptr = static_cast<uint8_t*>(&data);
 		uint8_t* ret_ptr = &return_data;
 		for(uint16_t i = 0; i < sizeof(data); ++i) {
 			_spi::queueByte(data_ptr[i]);
-			while(_spi::isBusy());
+			while(_spi::isBusy() && (++time_out < 0xFFFF));
 			if(!_spi::readByte(ret_ptr[i]))
 				break;
 		}
@@ -278,12 +280,13 @@ private:
 	static T exchangeLSB(T data)
 	{
 		T return_data = 0;
+		uint16_t time_out = 0;
 
 		uint8_t* data_ptr = static_cast<uint8_t*>(&data);
 		uint8_t* ret_ptr = &return_data;
 		for(int16_t i = sizeof(data)-1; i >= 0; --i) {
 			_spi::queueByte(data_ptr[i]);
-			while(_spi::isBusy());
+			while(_spi::isBusy() && (++time_out < 0xFFFF));
 			if(!_spi::readByte(ret_ptr[i]))
 				break;
 		}
