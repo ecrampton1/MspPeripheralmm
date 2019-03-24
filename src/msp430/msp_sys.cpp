@@ -16,6 +16,7 @@ void disable_irq()  { __dint(); }
 template<> \
 void McuSystem<Speed::SPEED_##S>::init() \
 { \
+	mUptimeInSeconds = 0; \
 	disableWatchDog(); \
 	BCSCTL1 = CALBC1_##S; \
 	DCOCTL = CALDCO_##S; \

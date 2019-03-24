@@ -9,7 +9,8 @@ extern volatile uint32_t mWatchDogCounter;
 
 namespace McuPeripheral {
 
-
+constexpr uint32_t ROLLOVER_OFFSET = UINT32_MAX / 1000ULL;
+constexpr uint32_t ROLLOVER_BIT_CHECK = 0x8000000ULL;
 
 constexpr uint16_t watchdog_control(McuSpeed m)
 {
@@ -30,6 +31,29 @@ public:
 	 *  @details This should be called as soon as main is entered.
 	 */
 	static void init();
+
+	/**
+	 *  @brief Call from main loop in order to keep an up time in seconds
+	 *	@returns the current uptime in seconds
+	 */
+	static uint32_t updateUpTimeInSeconds()
+	{
+		uint32_t ms = millis();
+
+		if(mRolloverPending) {
+			if(!(ROLLOVER_BIT_CHECK & ms)){
+				++mUptimeRolloverCounter;
+				mRolloverPending = false;
+			}
+		}
+		else {
+			if(ROLLOVER_BIT_CHECK & ms) {
+				mRolloverPending = true;
+			}
+		}
+
+		return (ROLLOVER_OFFSET * mUptimeRolloverCounter) + millis();
+	}
 
 	static void delayInUs(uint32_t time);
 
@@ -91,8 +115,14 @@ public:
 			}
 		}
 	}
-
+private:
+	uint8_t mUptimeRolloverCounter;  //keeps track of each time millis rollover
+	bool mRolloverPending; //set to true when millis = 0x8000 and cleared after rollover happens
 };
+
+template<McuSpeed _speed>
+uint8_t McuSystem<_speed>::mUptimeRolloverCounter = 0; //every ~50 days count rollover
+bool
 
 }
 

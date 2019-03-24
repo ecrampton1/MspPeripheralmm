@@ -8,11 +8,8 @@ namespace McuPeripheral {
 
 __attribute__((interrupt(WDT_VECTOR)))
 void watchDog (void)
-//#pragma vector=WDT_VECTOR
-//__attribute__((__interrupt__)) void watchDog(void)
 {
 	++mWatchDogCounter;
-	//_BIC_SR_IRQ(LPM3_bits);
 }
 
 #if 0
