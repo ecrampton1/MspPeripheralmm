@@ -26,7 +26,7 @@ using fake_pin = Periph::FakePin;
 using uart =  Periph::McuUart<UartA0, Periph::BaudRate::BAUD_115200, clock_speed>;
 using sys =  Periph::McuSystem<clock_speed>;
 using spi = Periph::McuSpi<SpiB0,Periph::SpiClock::SPI_EDGE2_LOW,Periph::SpiBitOrder::SPI_MSB,4 >;
-using rfm69 = Rfm69<spi, sys, rfm_nss,rfm_irq, CarrierFrequency::FREQUENCY_915, uart>;
+using RF = Rfm69<spi, sys, rfm_nss,rfm_irq, CarrierFrequency::FREQUENCY_915, uart>;
 
 
 
