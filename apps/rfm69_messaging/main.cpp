@@ -51,7 +51,7 @@ void handle_ping(void* args, void*  msg, uint16_t calling_id)
 	pong.get_message_payload()->count = ping_ptr->get_message_payload()->count;
 	led0::toggle();
 	sys::delayInMs(1);
-	Handler::publish_message(pong,calling_id);
+	Handler::publishMessage(pong,calling_id);
 }
 #endif
 

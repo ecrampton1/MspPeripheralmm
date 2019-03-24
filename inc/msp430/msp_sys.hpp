@@ -38,21 +38,24 @@ public:
 	 */
 	static uint32_t updateUpTimeInSeconds()
 	{
+		static bool rolloverPending = false;
+		static uint32_t uptimeRolloverCounter = 0;
+
 		uint32_t ms = millis();
 
-		if(mRolloverPending) {
+		if(rolloverPending) {
 			if(!(ROLLOVER_BIT_CHECK & ms)){
-				++mUptimeRolloverCounter;
-				mRolloverPending = false;
+				++uptimeRolloverCounter;
+				rolloverPending = false;
 			}
 		}
 		else {
 			if(ROLLOVER_BIT_CHECK & ms) {
-				mRolloverPending = true;
+				rolloverPending = true;
 			}
 		}
 
-		return (ROLLOVER_OFFSET * mUptimeRolloverCounter) + millis();
+		return (ROLLOVER_OFFSET * uptimeRolloverCounter) + millis();
 	}
 
 	static void delayInUs(uint32_t time);
@@ -116,13 +119,8 @@ public:
 		}
 	}
 private:
-	uint8_t mUptimeRolloverCounter;  //keeps track of each time millis rollover
-	bool mRolloverPending; //set to true when millis = 0x8000 and cleared after rollover happens
-};
 
-template<McuSpeed _speed>
-uint8_t McuSystem<_speed>::mUptimeRolloverCounter = 0; //every ~50 days count rollover
-bool
+};
 
 }
 
