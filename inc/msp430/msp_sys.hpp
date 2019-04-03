@@ -9,8 +9,8 @@ extern volatile uint32_t mWatchDogCounter;
 
 namespace McuPeripheral {
 
-constexpr uint32_t ROLLOVER_OFFSET = UINT32_MAX / 1000ULL;
-constexpr uint32_t ROLLOVER_BIT_CHECK = 0x8000000ULL;
+constexpr uint32_t ROLLOVER_OFFSET = UINT32_MAX / 1000000ULL;
+constexpr uint32_t ROLLOVER_BIT_CHECK = 0x80000000ULL;
 
 constexpr uint16_t watchdog_control(McuSpeed m)
 {
@@ -24,7 +24,7 @@ constexpr uint16_t watchdog_interval_us(McuSpeed m)
 
 
 template<McuSpeed _speed>
-class McuSystem : public SystemBase
+class McuSystem
 {
 public:
 	/** @brief Initializes the clock and disables the watchdog.
@@ -41,21 +41,21 @@ public:
 		static bool rolloverPending = false;
 		static uint32_t uptimeRolloverCounter = 0;
 
-		uint32_t ms = millis();
+		SystemTime us = micros();
 
 		if(rolloverPending) {
-			if(!(ROLLOVER_BIT_CHECK & ms)){
+			if(!(ROLLOVER_BIT_CHECK & us)){
 				++uptimeRolloverCounter;
 				rolloverPending = false;
 			}
 		}
 		else {
-			if(ROLLOVER_BIT_CHECK & ms) {
+			if(ROLLOVER_BIT_CHECK & us) {
 				rolloverPending = true;
 			}
 		}
 
-		return (ROLLOVER_OFFSET * uptimeRolloverCounter) + millis();
+		return (ROLLOVER_OFFSET * uptimeRolloverCounter) + (us / 1000000);
 	}
 
 	static void delayInUs(uint32_t time);

@@ -4,14 +4,19 @@
 
 //_closed , true if gpio high to close relay else false if gpio low to close relay.
 //this should init open
-template <bool _closedhigh, class _gpio>
+template <bool _closedhigh, class _gpio, class _sys, bool _keepopen=true>
 class RelayControl
 {
 public:
 
 	static void init()
 	{
-		open();
+		if(_keepopen) {
+			open();
+		}
+		else {
+			close();
+		}
 		_gpio::output();
 	}
 
@@ -45,6 +50,19 @@ public:
 		}
 	}
 
+	static void momentary(const uint32_t contactInMs)
+	{
+		if(_keepopen) {
+			close();
+			_sys::delayInMs(contactInMs);
+			open();
+		}
+		else {
+			open();
+			_sys::delayInMs(contactInMs);
+			close();
+		}
+	}
 };
 
 
