@@ -16,10 +16,13 @@ public:
 
 	static void handleMsg(PeripheralMessages::SwitchRequestMsg& switchMsg, const uint16_t calling_id)
 	{
-		const bool state = switchMsg.get_message_payload()->state;
+		bool state = switchMsg.get_message_payload()->state;
 		if(_momentary) {
 			if(state) {
+				//because this is momentary send true and then reset to false.
+				sendResponseEvent(state,calling_id);
 				_relay::momentary(_momenttimems);
+				state = false;
 			}
 		}
 		else {
@@ -30,11 +33,11 @@ public:
 				_relay::open();
 			}
 		}
-		sendResponseData(state,calling_id);
+		sendResponseEvent(state,calling_id);
 
 	}
 
-	static void sendResponseData(const bool state, const uint16_t calling_id)
+	static void sendResponseEvent(const bool state, const uint16_t calling_id)
 	{
 		uint8_t buffer[8];
 		PeripheralMessages::SwitchEventMsg msg(buffer,sizeof(buffer),true);
