@@ -130,6 +130,13 @@ __attribute__((interrupt(PORT2_VECTOR))) void PORT2_Irq(void)
 #undef PIN_INTERRUPT_HANDLER
 
 
+#ifdef TIMER0_CCR0_ENABLE_INT
+__attribute__((interrupt(TIMER0_A0_VECTOR))) void Timer0_A0(void)
+{
+
+}
+#endif
+
 #ifdef TIMER0_ENABLE_INT
 __attribute__((interrupt(TIMER0_A1_VECTOR))) void Timer0_A1(void)
 {
@@ -138,11 +145,18 @@ __attribute__((interrupt(TIMER0_A1_VECTOR))) void Timer0_A1(void)
 		case  2: break;                          // CCR1 not used yet
 		case  4: break;                          // CCR2 not used yet
 		case 10:           				// overflow
-			TimerControl<TACTL_, TAR_, TAIV_, TACCTL0_, TACCTL1_, TACCTL2_, TACCR0_, TACCR1_, TACCR2_>::mTimerHandler(TimerControl<TACTL_, TAR_, TAIV_, TACCTL0_, TACCTL1_, TACCTL2_, TACCR0_, TACCR1_, TACCR2_>::mTimerArgs);
+			TimerControl<TACTL_, TAR_,  TACCTL0_, TACCTL1_, TACCTL2_, TACCR0_, TACCR1_, TACCR2_>::mOverFlowCallback(TimerControl<TACTL_, TAR_, TACCTL0_, TACCTL1_, TACCTL2_, TACCR0_, TACCR1_, TACCR2_>::mOverFlowArgs);
 			break;
 		default:
 			break;
 	}
+
+}
+#endif
+
+#ifdef TIMER1_CCR0_ENABLE_INT
+__attribute__((interrupt(TIMER1_A0_VECTOR))) void Timer1_A0(void)
+{
 
 }
 #endif
@@ -155,7 +169,7 @@ __attribute__((interrupt(TIMER1_A1_VECTOR))) void Timer1_A1(void)
 		case  2: break;                          // CCR1 not used yet
 		case  4: break;                          // CCR2 not used yet
 		case 10:            				// overflow
-			TimerControl<TA1CTL_, TA1R_, TA1IV_, TA1CCTL0_, TA1CCTL1_, TA1CCTL2_,TA1CCR0_, TA1CCR1_, TA1CCR2_>::mTimerHandler(TimerControl<TACTL_, TAR_, TAIV_, TACCTL0_, TACCTL1_, TACCTL2_, TACCR0_, TACCR1_, TACCR2_>::mTimerArgs);
+			TimerControl<TA1CTL_, TA1R_, TA1CCTL0_, TA1CCTL1_, TA1CCTL2_,TA1CCR0_, TA1CCR1_, TA1CCR2_>::mOverFlowCallback(TimerControl<TACTL_, TAR_, TACCTL0_, TACCTL1_, TACCTL2_, TACCR0_, TACCR1_, TACCR2_>::mOverFlowArgs);
 			break;
 		default:
 			break;

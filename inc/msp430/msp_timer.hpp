@@ -102,7 +102,7 @@ private:
 };
 
 
-template<uint16_t _control, uint16_t _counter, uint16_t _interrupt,
+template<uint16_t _control, uint16_t _counter,
 	uint16_t _ccc0, uint16_t _ccc1, uint16_t _ccc2, uint16_t _ccr0, uint16_t _ccr1, uint16_t _ccr2>
 class TimerControl
 {
@@ -113,27 +113,28 @@ public:
 	using CapCompControl1 = CaptureCompareControl<_ccc1,_ccr1>;
 	using CapCompControl2 = CaptureCompareControl<_ccc2,_ccr2>;
 
-	static callback_t mTimerHandler;
-	static void* mTimerArgs;
+	static callback_t mOverFlowCallback;
+	static void* mOverFlowArgs;
 
 	/**@brief Enable the overflow irq of the timer
 	 */
-	static void enable_overflow_irq() { REG_16(_control) |= TAIE; }
+	static void intEnable() { REG_16(_control) |= TAIE; }
 
 	/**@brief Disable the overflow irq of the timer
 	 */
-	static void disable_overflow_irq() { REG_16(_control) &= ~TAIE; }
+	static void intDisable() { REG_16(_control) &= ~TAIE; }
 
-	static void clear_timer() { REG_16(_control) |= TACLR; }
+	static bool isIntEnable() { return REG_16(_control) & TAIE; }
 
-	static void stop_timer() { REG_16(_control) &= ~MC_3; }
+	static void clearTimer() { REG_16(_control) |= TACLR; }
 
-	static uint16_t get_counter_value() { return REG_16(_counter); }
+	static void stopTimer() { REG_16(_control) &= ~MC_3; }
 
-	//TODO determine what to divide by?
-	static void start_timer( TimerMode mode, TimerSource source, ClockDivider divide=ClockDivider::DIVIDE_1 ) { *((volatile uint16_t*)_control) |= ((uint16_t)source | (uint16_t)mode | (uint16_t)divide); }
+	static uint16_t getCounterValue() { return REG_16(_counter); }
 
-	static bool is_running() { return ( *((volatile uint16_t*)_control) & MC_3 ) > 0; }
+	static void startTimer( TimerMode mode, TimerSource source, ClockDivider divide=ClockDivider::DIVIDE_1 ) { *((volatile uint16_t*)_control) |= ((uint16_t)source | (uint16_t)mode | (uint16_t)divide); }
+
+	static bool isRunning() { return ( *((volatile uint16_t*)_control) & MC_3 ) > 0; }
 
 };
 
@@ -145,82 +146,84 @@ constexpr uint32_t compute_rollover()
 }
 
 
-template<TimerSource _source, class _timer, uint64_t _microSeconds, int32_t _clock >
-class McuTimer : public TimerBase< McuTimer< _source, _timer, _microSeconds, _clock> >
+//MCLK source
+template<TimerSource _source, uint32_t _clockspeed, ClockDivider _divider=ClockDivider::DIVIDE_1>
+class TimerConfig
 {
 public:
 
-	static int start()
+	static constexpr float computeTickTiming()
 	{
-		//check if timer be running
-		if(!_timer::is_running()) {
-			//_timer::mTimerHandler = &McuTimer< _source, _timer, _microSeconds, _clock>::TimerHandle;
-			mRollOverCount=0;
-			_timer::mTimerHandler = &McuTimer< _source, _timer, _microSeconds, _clock>::TimerHandle;
-			_DINT();
-			_timer::enable_overflow_irq();
-			_timer::clear_timer();
-			_timer::start_timer(TimerMode::CONT_MODE,_source);
-			_EINT();
-			return 0;
-		}
-
-		return -1;
+		return 1.0F / _clockspeed;
 	}
 
-	static void startFreeRunningTimer()
+	static constexpr float computeOverFlowTiming()
 	{
-		_timer::disable_overflow_irq();
-		_timer::start_timer(TimerMode::CONT_MODE,_source);
+		return computeTickTiming()*0xFFFF;
 	}
 
-	static uint16_t getTimerCount(){ return _timer::get_counter_value(); }
+	static constexpr TimerSource Source = _source;
+	static constexpr uint32_t ClockSpeed = _clockspeed;
+	static constexpr ClockDivider Divider = _divider;
 
-	static void stop() { _timer::stop_timer(); }
 
-	static void TimerHandle(void*)
-	{
-		++mRollOverCount;
-		if(mRollOverCount >= ROLLOVER)
-		{
-			mRollOverCount = 0;
-			TimerBase< McuTimer< _source, _timer, _microSeconds, _clock> >::mTimerCallback( TimerBase< McuTimer< _source, _timer, _microSeconds, _clock> >::mTimerCallbackArgs);
-		}
-	}
-
-	static uint32_t mRollOverCount;
-	static uint16_t mTimerCCR0Count;
-
-private:
-	static constexpr uint32_t ROLLOVER = compute_rollover<_source, _microSeconds, _clock>();
-	static constexpr uint16_t TIMERCCR0 = 0;
-
-	McuTimer() =delete;
-	McuTimer(const McuTimer&) =delete;
-	McuTimer& operator=(const McuTimer&) =delete;
-
-	//static const uint16_t TIMERCCR0 = 0;
-	//static const uint16_t TIMERCCR0 = compute_ccr0(_source, _microSeconds, _clock);
 };
 
-template<TimerSource _source, class _timer, uint64_t _microSeconds, int32_t _clock >
-uint32_t McuTimer< _source, _timer, _microSeconds, _clock>::mRollOverCount;
-template<TimerSource _source, class _timer, uint64_t _microSeconds, int32_t _clock >
-uint16_t McuTimer< _source, _timer, _microSeconds, _clock>::mTimerCCR0Count;
-template<uint16_t _control, uint16_t _counter, uint16_t _interrupt, uint16_t _ccc0, uint16_t _ccc1, uint16_t _ccc2, uint16_t _ccr0, uint16_t _ccr1, uint16_t _ccr2 >
-void* McuPeripheral::TimerControl<_control,_counter,_interrupt,_ccc0,_ccc1, _ccc2,_ccr0,_ccr1,_ccr2>::mTimerArgs;
+/*class InputCapture
+{
+public:
 
-template<uint16_t _control, uint16_t _counter, uint16_t _interrupt, uint16_t _ccc0,uint16_t _ccc1, uint16_t _ccc2, uint16_t _ccr0, uint16_t _ccr1, uint16_t _ccr2 >
-McuPeripheral::callback_t McuPeripheral::TimerControl<_control,_counter,_interrupt,_ccc0,_ccc1, _ccc2,_ccr0,_ccr1,_ccr2>::mTimerHandler;
+};*/
 
 
+template< class _timer, class _timerconfig >
+class ContinuousTimer
+{
+public:
+
+	static void intEnable()
+	{
+		_DINT();
+		_timer::intEnable();
+		_EINT();
+	}
+
+	static void start()
+	{
+		_timer::clearTimer();
+		_timer::startTimer(TimerMode::CONT_MODE,_timerconfig::Source,_timerconfig::Divider);
+	}
+
+	static void setCallback(callback_t callback, void* args)
+	{
+		_timer::mOverFlowCallback = callback;
+		_timer::mOverFlowArgs = args;
+	}
+
+	static uint16_t getTimerCount(){ return _timer::getCounterValue(); }
+
+	static void stop() { _timer::stopTimer(); }
+
+private:
+
+	ContinuousTimer() =delete;
+	ContinuousTimer(const ContinuousTimer&) =delete;
+	ContinuousTimer& operator=(const ContinuousTimer&) =delete;
+};
+
+
+template<uint16_t _control, uint16_t _counter, uint16_t _ccc0, uint16_t _ccc1, uint16_t _ccc2, uint16_t _ccr0, uint16_t _ccr1, uint16_t _ccr2 >
+void* McuPeripheral::TimerControl<_control,_counter,_ccc0,_ccc1, _ccc2,_ccr0,_ccr1,_ccr2>::mOverFlowArgs;
+
+template<uint16_t _control, uint16_t _counter, uint16_t _ccc0,uint16_t _ccc1, uint16_t _ccc2, uint16_t _ccr0, uint16_t _ccr1, uint16_t _ccr2 >
+McuPeripheral::callback_t McuPeripheral::TimerControl<_control,_counter,_ccc0,_ccc1, _ccc2,_ccr0,_ccr1,_ccr2>::mOverFlowCallback;
 
 
 }
 
 using Timer_Source = McuPeripheral::TimerSource;
 using Timer_Mode = McuPeripheral::TimerMode;
-using Timer0 = McuPeripheral::TimerControl<TACTL_, TAR_, TAIV_, TACCTL0_, TACCTL1_, TACCTL2_, TACCR0_, TACCR1_, TACCR2_>;
-using Timer1 = McuPeripheral::TimerControl<TA1CTL_, TA1R_, TA1IV_, TA1CCTL0_, TA1CCTL1_, TA1CCTL2_, TA1CCR0_, TA1CCR1_, TA1CCR2_>;
+using Timer0 = McuPeripheral::TimerControl<TACTL_, TAR_, TACCTL0_, TACCTL1_, TACCTL2_, TACCR0_, TACCR1_, TACCR2_>;
+using Timer1 = McuPeripheral::TimerControl<TA1CTL_, TA1R_, TA1CCTL0_, TA1CCTL1_, TA1CCTL2_, TA1CCR0_, TA1CCR1_, TA1CCR2_>;
 
 #endif //_MSP_TIMER_HPP
