@@ -133,7 +133,7 @@ __attribute__((interrupt(PORT2_VECTOR))) void PORT2_Irq(void)
 #ifdef TIMER0_CCR0_ENABLE_INT
 __attribute__((interrupt(TIMER0_A0_VECTOR))) void Timer0_A0(void)
 {
-
+	TimerControl<TACTL_, TAR_,  TACCTL0_, TACCTL1_, TACCTL2_, TACCR0_, TACCR1_, TACCR2_>::mCcr0Callback(0);
 }
 #endif
 
@@ -145,7 +145,7 @@ __attribute__((interrupt(TIMER0_A1_VECTOR))) void Timer0_A1(void)
 		case  2: break;                          // CCR1 not used yet
 		case  4: break;                          // CCR2 not used yet
 		case 10:           				// overflow
-			TimerControl<TACTL_, TAR_,  TACCTL0_, TACCTL1_, TACCTL2_, TACCR0_, TACCR1_, TACCR2_>::mOverFlowCallback(TimerControl<TACTL_, TAR_, TACCTL0_, TACCTL1_, TACCTL2_, TACCR0_, TACCR1_, TACCR2_>::mOverFlowArgs);
+			TimerControl<TACTL_, TAR_,  TACCTL0_, TACCTL1_, TACCTL2_, TACCR0_, TACCR1_, TACCR2_>::mOverFlowCallback(0);
 			break;
 		default:
 			break;
@@ -169,7 +169,7 @@ __attribute__((interrupt(TIMER1_A1_VECTOR))) void Timer1_A1(void)
 		case  2: break;                          // CCR1 not used yet
 		case  4: break;                          // CCR2 not used yet
 		case 10:            				// overflow
-			TimerControl<TA1CTL_, TA1R_, TA1CCTL0_, TA1CCTL1_, TA1CCTL2_,TA1CCR0_, TA1CCR1_, TA1CCR2_>::mOverFlowCallback(TimerControl<TACTL_, TAR_, TACCTL0_, TACCTL1_, TACCTL2_, TACCR0_, TACCR1_, TACCR2_>::mOverFlowArgs);
+			TimerControl<TA1CTL_, TA1R_, TA1CCTL0_, TA1CCTL1_, TA1CCTL2_,TA1CCR0_, TA1CCR1_, TA1CCR2_>::mOverFlowCallback(0);
 			break;
 		default:
 			break;
