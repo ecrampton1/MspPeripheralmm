@@ -16,12 +16,13 @@ constexpr Speed clock_speed = Speed::SPEED_16MHZ;
 
 using echo_pin =  Periph::McuPin<McuPort2,BIT1>;
 using trig_pin =  Periph::McuPin<McuPort2,BIT2>;
-
+using led0 =  Periph::McuPin<McuPort1,BIT0>;
 
 using uart =  Periph::McuUart<UartA0, Periph::BaudRate::BAUD_115200, clock_speed>;
 using sys =  Periph::McuSystem<clock_speed>;
-using timerConfig0 = Periph::TimerConfig< Timer_Source::SMCLK, (uint32_t) clock_speed, Periph::ClockDivider::DIVIDE_8 >;
-using continuousTimer = Periph::ContinuousTimer<Timer0,timerConfig0>;
+using timerConfig1 = Periph::TimerConfig< Timer_Source::SMCLK, (uint32_t) clock_speed, Periph::ClockDivider::DIVIDE_8 >;
+using continuousTimer = Periph::ContinuousTimer<Timer1,timerConfig1>;
+using pulseWidthMeasure = Periph::PulseWidthMeasure<Timer1,timerConfig1, Timer1::CapCompControl1, echo_pin>;
 //using mcuTimer1 = Periph::McuTimer< Timer_Source::ACLK, Timer1, 4000000 , (int32_t) clock_speed >;
 //using timer0Output = Periph::McuTimerOutput< Timer_Source::SMCLK, Timer0_A0, smclk_out , (int32_t) clock_speed >;
 

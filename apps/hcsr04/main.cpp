@@ -2,13 +2,20 @@
 #include <msp430.h>
 #include <stdint.h>
 
-static uint32_t mStartTime = 0;
-static uint32_t mEndTime = 0;
+static volatile uint16_t mCounts = 0;
 static volatile bool mOverFlow = false;
+static volatile bool mPulseFound = false;
 
 void handleOverFlow(void* args)
 {
 	mOverFlow = true;
+	mPulseFound = true;
+}
+
+void handlePulseWidth(void* args)
+{
+	mCounts = *static_cast<uint16_t*>(args);
+	mPulseFound = true;
 }
 
 
@@ -16,63 +23,43 @@ void handleOverFlow(void* args)
 
 void loop()
 {
-	sys::delayInMs(500);
-	continuousTimer::stop();
+	mPulseFound = false;
 	mOverFlow = false;
+	sys::delayInMs(500);
 	trig_pin::set();
 	sys::delayInUs(10);
 	trig_pin::clear();
-	continuousTimer::start();
+	pulseWidthMeasure::start();
 
-	while(true == echo_pin::read()) //ensure we see the low to high transition
-	{
-		if(mOverFlow) {
-			PRINT("1",ENDL);
-			return;
-		}
+	while(false == mPulseFound);
+
+	pulseWidthMeasure::stop();
+	if(mOverFlow) {
+		PRINT("Overflow", ENDL)
 	}
 
-	//Rising edge
-	while(false == echo_pin::read()) //wait
-	{
-		if(mOverFlow) {
-			PRINT("2",ENDL);
-			return;
-		}
-	}
-
-	mStartTime = continuousTimer::getTimerCount();
-
-	//falling edge
-	while(true == echo_pin::read()) //wait
-	{
-		if(mOverFlow) {
-			PRINT("3",ENDL);
-			return;
-		}
-	}
-
-	mEndTime = continuousTimer::getTimerCount();
+	PRINT("Width Counts: ", mCounts, ENDL)
 
 
-	PRINT("Start: ", mStartTime," End: ", mEndTime, "Diff: ", mEndTime - mStartTime, ENDL)
 }
 
 int main()
 {
 	sys::init();
 	sys::enableWatchDog(); //starts counting for system time
-	trig_pin::output();
-	echo_pin::clear();
-	echo_pin::input();
-	//trig_pin::pullUp();
-	//trig_pin::edgeLowToHigh();
-	//trig_pin::intEnable();
-
-	continuousTimer::setCallback(&handleOverFlow,0);
-	continuousTimer::intEnable();
 	uart::init();
+	led0::output();
+	led0::set();
+	trig_pin::output();
+
 	PRINT("Start HCSR04 Test",ENDL);
+	pulseWidthMeasure::init();
+	pulseWidthMeasure::setCallback(&handlePulseWidth);
+	pulseWidthMeasure::intEnable();
+	continuousTimer::setCallback(&handleOverFlow);
+	continuousTimer::intEnable();
+
+
 
 	while(1) {
 		loop();

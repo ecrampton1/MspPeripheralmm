@@ -3,6 +3,7 @@
 #include <stdint.h>
 #include "mcu_timer.hpp"
 #include "msp_periph.hpp"
+#include "msp430/msp_gpio.hpp"//TODO debug
 #include <msp430.h>
 
 namespace McuPeripheral {
@@ -79,7 +80,7 @@ public:
 	 */
 	static void startCapture(CapCompSelect ccis,  CapMode cm = CapMode::RISING_EDGE, SyncCapSource scs = SyncCapSource::ASYNC )
 	{
-		REG_16(_ccc) = static_cast<uint16_t>(scs) | static_cast<uint16_t>(cm)
+		REG_16(_ccc) |= static_cast<uint16_t>(scs) | static_cast<uint16_t>(cm)
 				| CAP | static_cast<uint16_t>(ccis);
 	}
 
@@ -88,13 +89,15 @@ public:
 
 	/**@brief this will return the state of the capture flag and will clear.
 	 * @return the state of the capture input flag if set a capture has occurred */
-	static bool read_CaptureFlag()
+	static bool readCaptureFlag()
 	{
 		//read the capture input flag and clear it.
 		bool ret = CCIFG & REG_16(_ccc);
 		if(ret) { REG_16(_ccc) &= ~CCIFG; }
 		return  ret;
 	}
+
+	static callback_t mCallback;
 
 private:
 
@@ -113,7 +116,7 @@ public:
 	using CapCompControl1 = CaptureCompareControl<_ccc1,_ccr1>;
 	using CapCompControl2 = CaptureCompareControl<_ccc2,_ccr2>;
 
-	static callback_t mOverFlowCallback;
+	static callback_t mCallback;
 
 	/**@brief Enable the overflow irq of the timer
 	 */
@@ -184,7 +187,8 @@ public:
 	{
 		_gpio::clear();
 		_gpio::input();
-		_gpio::selectOn();//Only works for Port?
+		_gpio::selectOn();//Only works for Port2?
+		intEnable();
 		_ccc::mCallback = &timerCallback;
 	}
 
@@ -209,7 +213,9 @@ public:
 
 	static void stop()
 	{
-		_ccc::stopCapture
+		_timer::stopTimer();
+		_ccc::stopCapture();
+
 	}
 
 	static uint16_t getPulseWidthTicks()
@@ -223,10 +229,10 @@ public:
 		return 0;
 	}
 
-	static void timerCallback(callback_t callback)
+	static void timerCallback(callback_args_t callback)
 	{
 		const uint16_t count = _ccc::getCapCompValue();
-
+		McuPin<McuPort1,BIT0>::toggle();
 		if(_pulsehigh) {
 			setCounts(_gpio::read(), count);
 		}
@@ -255,6 +261,11 @@ public:
 	static uint16_t mWidthCount;
 	static callback_t mCallback;
 
+private:
+	PulseWidthMeasure() =delete;
+	PulseWidthMeasure(const PulseWidthMeasure&) =delete;
+	PulseWidthMeasure& operator=(const PulseWidthMeasure&) =delete;
+
 };
 
 
@@ -276,7 +287,7 @@ public:
 
 	static void setCallback(callback_t callback)
 	{
-		_timer::mOverFlowCallback = callback;
+		_timer::mCallback = callback;
 	}
 
 	static uint16_t getTimerCount(){ return _timer::getCounterValue(); }
@@ -291,25 +302,25 @@ private:
 };
 
 template<uint16_t _control, uint16_t _counter, uint16_t _taiv,uint16_t _ccc0,uint16_t _ccc1, uint16_t _ccc2, uint16_t _ccr0, uint16_t _ccr1, uint16_t _ccr2 >
-McuPeripheral::callback_t McuPeripheral::TimerControl<_control,_counter, _taiv, _ccc0,_ccc1, _ccc2,_ccr0,_ccr1,_ccr2>::mOverFlowCallback;
+McuPeripheral::callback_t McuPeripheral::TimerControl<_control,_counter, _taiv, _ccc0,_ccc1, _ccc2,_ccr0,_ccr1,_ccr2>::mCallback;
 
-template<uint16_t _control, uint16_t _counter, uint16_t _taiv,uint16_t _ccc0,uint16_t _ccc1, uint16_t _ccc2, uint16_t _ccr0, uint16_t _ccr1, uint16_t _ccr2 >
-McuPeripheral::callback_t McuPeripheral::TimerControl<_control,_counter, _taiv, _ccc0,_ccc1, _ccc2,_ccr0,_ccr1,_ccr2>::mCcr0Callback;
+template< class _timer, class _timerconfig, class _ccc, class _gpio, CapCompSelect _ccis, bool _pulsehigh >
+uint16_t PulseWidthMeasure<_timer, _timerconfig, _ccc, _gpio, _ccis, _pulsehigh>::mStartCount;
 
-template<uint16_t _control, uint16_t _counter, uint16_t _taiv,uint16_t _ccc0,uint16_t _ccc1, uint16_t _ccc2, uint16_t _ccr0, uint16_t _ccr1, uint16_t _ccr2 >
-McuPeripheral::callback_t McuPeripheral::TimerControl<_control,_counter, _taiv, _ccc0,_ccc1, _ccc2,_ccr0,_ccr1,_ccr2>::mCcr0Callback;
+template< class _timer, class _timerconfig, class _ccc, class _gpio, CapCompSelect _ccis, bool _pulsehigh >
+uint16_t PulseWidthMeasure<_timer, _timerconfig, _ccc, _gpio, _ccis, _pulsehigh>::mWidthCount;
 
-template<uint16_t _control, uint16_t _counter, uint16_t _taiv,uint16_t _ccc0,uint16_t _ccc1, uint16_t _ccc2, uint16_t _ccr0, uint16_t _ccr1, uint16_t _ccr2 >
-McuPeripheral::callback_t McuPeripheral::TimerControl<_control,_counter, _taiv, _ccc0,_ccc1, _ccc2,_ccr0,_ccr1,_ccr2>::mCcr0Callback;
+template< class _timer, class _timerconfig, class _ccc, class _gpio, CapCompSelect _ccis, bool _pulsehigh >
+callback_t PulseWidthMeasure<_timer, _timerconfig, _ccc, _gpio, _ccis, _pulsehigh>::mCallback;
 
-template<uint16_t _control, uint16_t _counter, uint16_t _taiv,uint16_t _ccc0,uint16_t _ccc1, uint16_t _ccc2, uint16_t _ccr0, uint16_t _ccr1, uint16_t _ccr2 >
-McuPeripheral::callback_t McuPeripheral::TimerControl<_control,_counter, _taiv, _ccc0,_ccc1, _ccc2,_ccr0,_ccr1,_ccr2>::mCcr0Callback;
+template< uint16_t _ccc, uint16_t _ccr >
+callback_t CaptureCompareControl<_ccc,_ccr>::mCallback;
 
 }
 
 using Timer_Source = McuPeripheral::TimerSource;
 using Timer_Mode = McuPeripheral::TimerMode;
-using Timer0 = McuPeripheral::TimerControl<TACTL_, TAR_, TACCTL0_, TACCTL1_, TACCTL2_, TACCR0_, TACCR1_, TACCR2_>;
-using Timer1 = McuPeripheral::TimerControl<TA1CTL_, TA1R_, TA1CCTL0_, TA1CCTL1_, TA1CCTL2_, TA1CCR0_, TA1CCR1_, TA1CCR2_>;
+using Timer0 = McuPeripheral::TimerControl<TACTL_, TAR_, TAIV_, TACCTL0_, TACCTL1_, TACCTL2_, TACCR0_, TACCR1_, TACCR2_>;
+using Timer1 = McuPeripheral::TimerControl<TA1CTL_, TA1R_, TAIV_, TA1CCTL0_, TA1CCTL1_, TA1CCTL2_, TA1CCR0_, TA1CCR1_, TA1CCR2_>;
 
 #endif //_MSP_TIMER_HPP
