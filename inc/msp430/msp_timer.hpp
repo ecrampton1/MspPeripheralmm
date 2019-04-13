@@ -72,6 +72,12 @@ public:
 	 */
 	static uint16_t getCapCompValue() { return REG_16(_ccr); }
 
+	static bool getCciValue() { return REG_16(_ccc) & CCI; }
+
+	static bool getCovValue() { return REG_16(_ccc) & COV; }
+
+	static bool clearCov() { return REG_16(_ccc) &= ~COV; }
+
 
 	/**@brief Starts the capture based on the parameters passed in
 	 * @param [in] ccis selects what is triggering the input for the capture @ref CapCompSelect
@@ -165,6 +171,11 @@ public:
 		return 1.0F / _clockspeed;
 	}
 
+	static constexpr uint32_t computeTickTimingNs()
+	{
+		return (uint32_t)(computeTickTiming() * 1000000000.0F);
+	}
+
 	static constexpr float computeOverFlowTiming()
 	{
 		return computeTickTiming()*0xFFFF;
@@ -215,40 +226,46 @@ public:
 	{
 		_timer::stopTimer();
 		_ccc::stopCapture();
+		(void)_ccc::readCaptureFlag();
 
 	}
 
 	static uint16_t getPulseWidthTicks()
 	{
-		return mWidthCount;
+		return mEndCount - mStartCount;
 	}
 
-	static uint32_t getPulseWidthUs()
+	static uint32_t getPulseWidthNs()
 	{
 		//TODO determine the formula for ticks to us
-		return 0;
+		return getPulseWidthTicks()*_timerconfig::computeTickTimingNs();
 	}
 
 	static void timerCallback(callback_args_t callback)
 	{
 		const uint16_t count = _ccc::getCapCompValue();
-		McuPin<McuPort1,BIT0>::toggle();
+		if(_ccc::getCovValue()) {
+			_ccc::clearCov();
+		}
 		if(_pulsehigh) {
-			setCounts(_gpio::read(), count);
+			setCounts(_ccc::getCciValue(), count);
 		}
 		else {
-			setCounts(!_gpio::read(), count);
+
+			setCounts(!_ccc::getCciValue(), count);
 		}
 	}
 
 	static inline void setCounts(const bool start, const uint16_t count)
 	{
 		if(start) {
+
 			mStartCount = count;
 		}
 		else {
-			mWidthCount = count - mStartCount;
-			mCallback((callback_args_t)&mWidthCount); //send the pulse width to user
+			McuPin<McuPort1,BIT0>::toggle();
+			mEndCount = count;
+			mCallback(0); //send the pulse width to user
 		}
 	}
 
@@ -257,8 +274,8 @@ public:
 		mCallback = callback; //User callback
 	}
 
-	static uint16_t mStartCount;
-	static uint16_t mWidthCount;
+	static volatile uint16_t mStartCount;
+	static volatile uint16_t mEndCount;
 	static callback_t mCallback;
 
 private:
@@ -305,10 +322,10 @@ template<uint16_t _control, uint16_t _counter, uint16_t _taiv,uint16_t _ccc0,uin
 McuPeripheral::callback_t McuPeripheral::TimerControl<_control,_counter, _taiv, _ccc0,_ccc1, _ccc2,_ccr0,_ccr1,_ccr2>::mCallback;
 
 template< class _timer, class _timerconfig, class _ccc, class _gpio, CapCompSelect _ccis, bool _pulsehigh >
-uint16_t PulseWidthMeasure<_timer, _timerconfig, _ccc, _gpio, _ccis, _pulsehigh>::mStartCount;
+volatile uint16_t PulseWidthMeasure<_timer, _timerconfig, _ccc, _gpio, _ccis, _pulsehigh>::mStartCount;
 
 template< class _timer, class _timerconfig, class _ccc, class _gpio, CapCompSelect _ccis, bool _pulsehigh >
-uint16_t PulseWidthMeasure<_timer, _timerconfig, _ccc, _gpio, _ccis, _pulsehigh>::mWidthCount;
+volatile uint16_t PulseWidthMeasure<_timer, _timerconfig, _ccc, _gpio, _ccis, _pulsehigh>::mEndCount;
 
 template< class _timer, class _timerconfig, class _ccc, class _gpio, CapCompSelect _ccis, bool _pulsehigh >
 callback_t PulseWidthMeasure<_timer, _timerconfig, _ccc, _gpio, _ccis, _pulsehigh>::mCallback;

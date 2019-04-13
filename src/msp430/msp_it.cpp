@@ -171,7 +171,7 @@ __attribute__((interrupt(TIMER1_A1_VECTOR))) void Timer1_A1(void)
 	switch( TA1IV )
 	{
 		case  2:
-			CaptureCompareControl<TA1CCTL1_,TA1CCR1_>::mCallback(0);
+				CaptureCompareControl<TA1CCTL1_,TA1CCR1_>::mCallback(0);
 			break;
 		case  4:
 			CaptureCompareControl<TA1CCTL2_,TA1CCR2_>::mCallback(0);

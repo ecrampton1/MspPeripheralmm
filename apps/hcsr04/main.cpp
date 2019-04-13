@@ -2,7 +2,6 @@
 #include <msp430.h>
 #include <stdint.h>
 
-static volatile uint16_t mCounts = 0;
 static volatile bool mOverFlow = false;
 static volatile bool mPulseFound = false;
 
@@ -14,8 +13,8 @@ void handleOverFlow(void* args)
 
 void handlePulseWidth(void* args)
 {
-	mCounts = *static_cast<uint16_t*>(args);
 	mPulseFound = true;
+	pulseWidthMeasure::stop();
 }
 
 
@@ -29,16 +28,15 @@ void loop()
 	trig_pin::set();
 	sys::delayInUs(10);
 	trig_pin::clear();
+
 	pulseWidthMeasure::start();
 
 	while(false == mPulseFound);
 
-	pulseWidthMeasure::stop();
 	if(mOverFlow) {
 		PRINT("Overflow", ENDL)
 	}
-
-	PRINT("Width Counts: ", mCounts, ENDL)
+	PRINT("Width cm: ", (pulseWidthMeasure::getPulseWidthNs()*172)/1000000, ENDL)
 
 
 }
@@ -56,8 +54,8 @@ int main()
 	pulseWidthMeasure::init();
 	pulseWidthMeasure::setCallback(&handlePulseWidth);
 	pulseWidthMeasure::intEnable();
-	continuousTimer::setCallback(&handleOverFlow);
-	continuousTimer::intEnable();
+	//continuousTimer::setCallback(&handleOverFlow);
+	//continuousTimer::intEnable();
 
 
 
