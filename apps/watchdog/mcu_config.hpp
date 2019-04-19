@@ -21,8 +21,6 @@ using smclk_out =  Periph::McuPin<McuPort1,BIT4>;
 
 using uart =  Periph::McuUart<UartA0, Periph::BaudRate::BAUD_115200, clock_speed>;
 using sys =  Periph::McuSystem<clock_speed>;
-using mcuTimer0 = Periph::McuTimer< Timer_Source::SMCLK, Timer0, 1000000 , (int32_t) clock_speed >;
-using mcuTimer1 = Periph::McuTimer< Timer_Source::ACLK, Timer1, 4000000 , (int32_t) clock_speed >;
 //using timer0Output = Periph::McuTimerOutput< Timer_Source::SMCLK, Timer0_A0, smclk_out , (int32_t) clock_speed >;
 
 //If you want to enable smaller size try turning off isr's you are not using

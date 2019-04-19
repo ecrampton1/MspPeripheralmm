@@ -1,6 +1,9 @@
 #include "msp430/msp_sys.hpp"
 
-volatile uint32_t mWatchDogCounter;
+volatile uint32_t mMillisCounter = 0;
+volatile uint16_t mMicrosCounter = 0;
+uint16_t WATCH_DOG_INTERVAL_US;
+
 namespace McuPeripheral {
 
 //default speed is 16MHZ
@@ -16,6 +19,7 @@ void disable_irq()  { __dint(); }
 template<> \
 void McuSystem<Speed::SPEED_##S>::init() \
 { \
+	WATCH_DOG_INTERVAL_US = watchdog_interval_us(Speed::SPEED_##S);\
 	disableWatchDog(); \
 	BCSCTL1 = CALBC1_##S; \
 	DCOCTL = CALDCO_##S; \

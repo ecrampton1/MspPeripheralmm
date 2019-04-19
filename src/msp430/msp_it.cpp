@@ -9,7 +9,12 @@ namespace McuPeripheral {
 __attribute__((interrupt(WDT_VECTOR)))
 void watchDog (void)
 {
-	++mWatchDogCounter;
+	mMicrosCounter += WATCH_DOG_INTERVAL_US;
+	if(mMicrosCounter >= 1000) { //1000us
+		++mMillisCounter;
+		mMicrosCounter -= 1000;
+	}
+
 }
 
 #if 0
@@ -25,6 +30,7 @@ __attribute__((interrupt(NMI_VECTOR))) void NMI_Irq(void)
 	__no_operation();
 	while(1);
 }
+
 #endif
 
 #if defined( UARTA0_ENABLE_INT ) || defined( UARTB0_ENABLE_INT )
