@@ -251,7 +251,6 @@ public:
 			setCounts(_ccc::getCciValue(), count);
 		}
 		else {
-
 			setCounts(!_ccc::getCciValue(), count);
 		}
 	}
@@ -263,6 +262,7 @@ public:
 			mStartCount = count;
 		}
 		else {
+			stop();
 			McuPin<McuPort1,BIT0>::toggle();
 			mEndCount = count;
 			mCallback(0); //send the pulse width to user

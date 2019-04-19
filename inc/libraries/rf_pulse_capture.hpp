@@ -16,26 +16,29 @@ public:
 		_pulse::setCallback(&handlePulseWidth);
 		_pulse::intEnable();
 
-		mNextTriggerTime = _sys::micros()+TIME_BETWEEN_READINGS;
+		mNextTriggerTime = _sys::millis()+TIME_BETWEEN_READINGS;
 	}
 
 	static void serviceOnce()
 	{
 		if(mPulseFound) {
 			uint16_t distanceInCm = (_pulse::getPulseWidthNs()*172)/1000000;
-			sendData(distanceInCm);
+			if(distanceInCm > 0)
+				sendData(distanceInCm);
+			mPulseFound = false;
 		}
-		else if(mNextTriggerTime >= _sys::micros()) {
+		else if(mNextTriggerTime <= _sys::millis()) {
 			triggerPulse();
-			mNextTriggerTime = _sys::micros()+TIME_BETWEEN_READINGS;
+			mNextTriggerTime = _sys::millis()+TIME_BETWEEN_READINGS;
 		}
 		//else return doing nothing
 	}
 
 	static void handlePulseWidth(void* args)
 	{
-		mPulseFound = true;
 		_pulse::stop();
+		mPulseFound = true;
+
 	}
 
 	static void triggerPulse()
@@ -43,8 +46,8 @@ public:
 		_gpio::set();
 		_sys::delayInUs(10);
 		_gpio::clear();
-		mPulseFound = false;
 		_pulse::start();
+
 	}
 
 	static void sendData(const uint16_t distanceInCm)
@@ -57,7 +60,7 @@ public:
 
 	static McuPeripheral::SystemTime mNextTriggerTime;
 	static bool mPulseFound;
-	static constexpr McuPeripheral::SystemTime TIME_BETWEEN_READINGS = 500000;
+	static constexpr McuPeripheral::SystemTime TIME_BETWEEN_READINGS = 500;
 };
 
 template <class _pulse, class _sys, class _gpio, class _handler >

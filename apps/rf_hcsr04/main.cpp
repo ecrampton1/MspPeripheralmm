@@ -10,6 +10,7 @@ void setup() {
 	sys::enableWatchDog(); //starts counting for system time
 	uart::init();
 	Handler::begin(NODE_ADDRESS);
+	rfPulse::init();
 	PRINT("SETUP!",ENDL)
 }
 

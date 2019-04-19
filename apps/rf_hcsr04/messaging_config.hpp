@@ -4,8 +4,6 @@
 
 static constexpr uint8_t NODEID = 11;
 
-#define FOR_ALL_INCOMING_MESSAGES(ACTION) \
-	ACTION( PingPongQuery ) \
-	ACTION( PingPongData )
+#define FOR_ALL_INCOMING_MESSAGES(ACTION)
 
 #endif //MESSAGING_CONFIG_HPP_
