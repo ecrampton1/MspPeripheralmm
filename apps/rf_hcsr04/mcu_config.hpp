@@ -11,7 +11,7 @@
 //Libraries
 #include "rfm69/rfm69.hpp"
 #include "rfm69_message_handler.hpp"
-#include "rf_pulse_capture.hpp"
+#include "rf_hcsr04.hpp"
 
 namespace Periph = McuPeripheral;
 
@@ -36,7 +36,7 @@ using Handler = PeripheralMessages::RFM69Handler;
 using timerConfig1 = Periph::TimerConfig< Timer_Source::SMCLK, (uint32_t) clock_speed, Periph::ClockDivider::DIVIDE_8 >;
 using continuousTimer = Periph::ContinuousTimer<Timer1,timerConfig1>;
 using pulseWidthMeasure = Periph::PulseWidthMeasure<Timer1,timerConfig1, Timer1::CapCompControl1, echo_pin>;
-using rfPulse = RfPulseCapture<pulseWidthMeasure,sys,trig_pin,Handler>;
+using rfPulse = RfHcsr04<pulseWidthMeasure,sys,trig_pin,Handler>;
 
 
 

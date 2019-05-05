@@ -1,11 +1,11 @@
-#ifndef _RF_PULSE_CAPTURE_HPP_
-#define _RF_PULSE_CAPTURE_HPP_
+#ifndef _RF_HC_SR04_HPP_
+#define _RF_HC_SR04_HPP_
 #include "message.hpp"
 #include "mcu_sys.hpp"
 
 
 template <class _pulse, class _sys, class _gpio, class _handler >
-class RfPulseCapture
+class RfHcsr04
 {
 public:
 
@@ -33,7 +33,7 @@ public:
 		}
 		//else return doing nothing
 	}
-
+private:
 	static void handlePulseWidth(void* args)
 	{
 		_pulse::stop();
@@ -64,8 +64,8 @@ public:
 };
 
 template <class _pulse, class _sys, class _gpio, class _handler >
-McuPeripheral::SystemTime RfPulseCapture<_pulse, _sys, _gpio, _handler>::mNextTriggerTime=0;
+McuPeripheral::SystemTime RfHcsr04<_pulse, _sys, _gpio, _handler>::mNextTriggerTime=0;
 template <class _pulse, class _sys, class _gpio, class _handler  >
-bool RfPulseCapture<_pulse, _sys, _gpio, _handler >::mPulseFound=false;
+bool RfHcsr04<_pulse, _sys, _gpio, _handler >::mPulseFound=false;
 
-#endif //_RF_PULSE_CAPTURE_HPP_
+#endif //_RF_HC_SR04_HPP_
