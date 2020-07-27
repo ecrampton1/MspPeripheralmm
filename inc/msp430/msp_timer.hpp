@@ -45,6 +45,14 @@ enum class CapMode : uint16_t
 	DUAL_EDGE = CM_3
 };
 
+enum class OutputMode : uint16_t
+{
+	TOGGLE_RESET = OUTMOD_2,
+	SET_RESET = OUTMOD_3,
+	TOGGLE_SET = OUTMOD_6,
+	RESET_SET = OUTMOD_7,
+};
+
 enum class SyncCapSource : uint16_t
 {
 	ASYNC = 0,
@@ -52,7 +60,7 @@ enum class SyncCapSource : uint16_t
 };
 
 
-template< uint16_t _ccc, uint16_t _ccr >
+template< uint16_t _ccc>
 class CaptureCompareControl
 {
 public:
@@ -67,17 +75,16 @@ public:
 	 */
 	static void intDisable() { REG_16(_ccc) &= ~CCIE; }
 
-	/**
-	 * @return the value in the compare/capture register
-	 */
-	static uint16_t getCapCompValue() { return REG_16(_ccr); }
-
 	static bool getCciValue() { return REG_16(_ccc) & CCI; }
 
 	static bool getCovValue() { return REG_16(_ccc) & COV; }
 
 	static bool clearCov() { return REG_16(_ccc) &= ~COV; }
 
+	static void startCompare(OutputMode mode )
+	{
+		REG_16(_ccc) |= static_cast<uint16_t>(mode);
+	}
 
 	/**@brief Starts the capture based on the parameters passed in
 	 * @param [in] ccis selects what is triggering the input for the capture @ref CapCompSelect
@@ -91,7 +98,7 @@ public:
 	}
 
 	/**@brief Stop capturing */
-	static void stopCapture(){ REG_16(_ccr) &= ~(CM_3 | CAP); }
+	static void stopCapture(){ REG_16(_ccc) &= ~(CM_3 | CAP); }
 
 	/**@brief this will return the state of the capture flag and will clear.
 	 * @return the state of the capture input flag if set a capture has occurred */
@@ -118,9 +125,11 @@ class TimerControl
 public:
 
 	//Capture Compare Register Control
-	using CapCompControl0 = CaptureCompareControl<_ccc0,_ccr0>;
-	using CapCompControl1 = CaptureCompareControl<_ccc1,_ccr1>;
-	using CapCompControl2 = CaptureCompareControl<_ccc2,_ccr2>;
+	//TODO _ccr0,1,2 are shared amongst all three ccc0,1,2.
+	//static uint8_t that is shared to show ownership?
+	using CapCompControl0 = CaptureCompareControl<_ccc0>;
+	using CapCompControl1 = CaptureCompareControl<_ccc1>;
+	using CapCompControl2 = CaptureCompareControl<_ccc2>;
 
 	static callback_t mCallback;
 
@@ -137,6 +146,18 @@ public:
 	static void clearTimer() { REG_16(_control) |= TACLR; }
 
 	static void stopTimer() { REG_16(_control) &= ~MC_3; }
+
+	static void setCcr0( const uint16_t count) { REG_16(_ccr0) = count; }
+
+	static void setCcr1(const uint16_t count) { REG_16(_ccr1) = count; }
+
+	static void setCcr2(const uint16_t count) { REG_16(_ccr2) = count; }
+
+	static uint16_t getCcr0() { return REG_16(_ccr0); }
+
+	static uint16_t getCcr1() { return REG_16(_ccr1); }
+
+	static uint16_t getCcr2() { return REG_16(_ccr2); }
 
 	static bool clearOverFlow() {return REG_16(_taiv) &= ~TAIV;}
 
@@ -188,8 +209,64 @@ public:
 
 };
 
+//Output pwm TODO
+/*
+ *  Waveform:  ___
+ * 		      |   |______|
+ * 		      A   B      C
+ *  A-C: Period timing
+ *  A-B: Percentage high/low depending on _pulseHigh
+ *
+ * always uses ccr1 and ccr2?
+ */
+template< class _timer, class _timerconfig, class _ccc, class _gpio, bool _pulsehigh=true >
+class PulseWidthOutput
+{
+public:
 
-template< class _timer, class _timerconfig, class _ccc, class _gpio, CapCompSelect _ccis=CapCompSelect::CCIA, bool _pulsehigh=true >
+	static void init()
+	{
+		_gpio::clear();
+		_gpio::output();
+		_gpio::selectOn();//Only works for Port2?
+		intEnable();
+		_ccc::mCallback = &timerCallback;
+	}
+
+	//Same timer interrupt
+	static void intEnable()
+	{
+		_ccc::intEnable();
+	}
+
+	//Same timer interrupt
+	static void intDisable()
+	{
+		_ccc::intDisable();
+	}
+
+	static void start()
+	{
+		_timer::clearTimer();  //copy paste from continuous mode timer... TODO clean up
+		_timer::startTimer(TimerMode::CONT_MODE,_timerconfig::Source,_timerconfig::Divider);
+
+	}
+
+	static void stop()
+	{
+		_timer::stopTimer();
+		_ccc::stopCapture();
+	}
+
+	static void timerCallback(callback_args_t callback)
+	{
+		//TODO count the number of times?
+	}
+};
+
+
+//Measure the width input pulses (always uses ccr0?)
+template< class _timer, class _timerconfig, class _ccc, class _gpio,uint16_t _ccr, CapCompSelect _ccis=CapCompSelect::CCIA, bool _pulsehigh=true >
 class PulseWidthMeasure
 {
 public:
@@ -243,7 +320,7 @@ public:
 
 	static void timerCallback(callback_args_t callback)
 	{
-		const uint16_t count = _ccc::getCapCompValue();
+		const uint16_t count = REG_16(_ccr);//always get ccr0?
 		if(_ccc::getCovValue()) {
 			_ccc::clearCov();
 		}
@@ -263,7 +340,6 @@ public:
 		}
 		else {
 			stop();
-			McuPin<McuPort1,BIT0>::toggle();
 			mEndCount = count;
 			mCallback(0); //send the pulse width to user
 		}
@@ -321,17 +397,17 @@ private:
 template<uint16_t _control, uint16_t _counter, uint16_t _taiv,uint16_t _ccc0,uint16_t _ccc1, uint16_t _ccc2, uint16_t _ccr0, uint16_t _ccr1, uint16_t _ccr2 >
 McuPeripheral::callback_t McuPeripheral::TimerControl<_control,_counter, _taiv, _ccc0,_ccc1, _ccc2,_ccr0,_ccr1,_ccr2>::mCallback;
 
-template< class _timer, class _timerconfig, class _ccc, class _gpio, CapCompSelect _ccis, bool _pulsehigh >
-volatile uint16_t PulseWidthMeasure<_timer, _timerconfig, _ccc, _gpio, _ccis, _pulsehigh>::mStartCount;
+template< class _timer, class _timerconfig, class _ccc, class _gpio, uint16_t _ccr,CapCompSelect _ccis, bool _pulsehigh >
+volatile uint16_t PulseWidthMeasure<_timer, _timerconfig, _ccc, _gpio,_ccr, _ccis, _pulsehigh>::mStartCount;
 
-template< class _timer, class _timerconfig, class _ccc, class _gpio, CapCompSelect _ccis, bool _pulsehigh >
-volatile uint16_t PulseWidthMeasure<_timer, _timerconfig, _ccc, _gpio, _ccis, _pulsehigh>::mEndCount;
+template< class _timer, class _timerconfig, class _ccc, class _gpio,uint16_t _ccr, CapCompSelect _ccis, bool _pulsehigh >
+volatile uint16_t PulseWidthMeasure<_timer, _timerconfig, _ccc, _gpio,_ccr, _ccis, _pulsehigh>::mEndCount;
 
-template< class _timer, class _timerconfig, class _ccc, class _gpio, CapCompSelect _ccis, bool _pulsehigh >
-callback_t PulseWidthMeasure<_timer, _timerconfig, _ccc, _gpio, _ccis, _pulsehigh>::mCallback;
+template< class _timer, class _timerconfig, class _ccc, class _gpio,uint16_t _ccr, CapCompSelect _ccis, bool _pulsehigh >
+callback_t PulseWidthMeasure<_timer, _timerconfig, _ccc, _gpio, _ccr,_ccis, _pulsehigh>::mCallback;
 
-template< uint16_t _ccc, uint16_t _ccr >
-callback_t CaptureCompareControl<_ccc,_ccr>::mCallback;
+template< uint16_t _ccc>
+callback_t CaptureCompareControl<_ccc>::mCallback;
 
 }
 

@@ -28,7 +28,7 @@ int main()
 	uart::send("Start Timer Test\n");
 
 	mcuTimer0::stop();
-	mcuTimer0::set_callback(&periodicPrint,0);
+	mcuTimer0::setCallback(&periodicPrint);
 	int ret = mcuTimer0::start();
 
 	_EINT();

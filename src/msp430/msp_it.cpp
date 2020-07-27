@@ -148,13 +148,13 @@ __attribute__((interrupt(TIMER0_A1_VECTOR))) void Timer0_A1(void)
 {
 	switch( TAIV )
 	{
-		case  2:
-			CaptureCompareControl<TA1CCTL1_,TA1CCR1_>::mCallback(0);
+		case  TA0IV_TACCR1:
+			CaptureCompareControl<TA0CCTL1>::mCallback(0);
 			break;
-		case  4:
-			CaptureCompareControl<TA1CCTL1_,TA1CCR1_>::mCallback(0);
+		case  TA0IV_TACCR2:
+			CaptureCompareControl<TA0CCTL1_>::mCallback(0);
 			break;
-		case 10:           				// overflow
+		case TA1IV_TAIFG:           				// overflow
 			TimerControl<TACTL_, TAR_,  TAIV_, TACCTL0_, TACCTL1_, TACCTL2_, TACCR0_, TACCR1_, TACCR2_>::mCallback(0);
 			break;
 		default:
@@ -177,10 +177,10 @@ __attribute__((interrupt(TIMER1_A1_VECTOR))) void Timer1_A1(void)
 	switch( TA1IV )
 	{
 		case  2:
-				CaptureCompareControl<TA1CCTL1_,TA1CCR1_>::mCallback(0);
+				CaptureCompareControl<TA1CCTL1_>::mCallback(0);
 			break;
 		case  4:
-			CaptureCompareControl<TA1CCTL2_,TA1CCR2_>::mCallback(0);
+			CaptureCompareControl<TA1CCTL2_>::mCallback(0);
 			break;
 		case 10:            				// overflow
 			TimerControl<TA1CTL_, TA1R_, TAIV_, TA1CCTL0_, TA1CCTL1_, TA1CCTL2_,TA1CCR0_, TA1CCR1_, TA1CCR2_>::mCallback(0);

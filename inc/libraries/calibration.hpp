@@ -28,7 +28,7 @@ public:
 
 		//writeNewClockValues();
 
-		Timer0::stop_timer();
+//TODO		Timer0::stop_timer();
 		return 0;
 	}
 
@@ -90,8 +90,8 @@ private:
 	static uint16_t getCaptureValue()
 	{
 		//start timer and get capture
-		while(!Timer0::CapCompControl0::read_capture_flag()){}
-		return Timer0::CapCompControl0::get_cap_comp_value();
+//TODO		while(!Timer0::CapCompControl0::read_capture_flag()){}
+//TODO		return Timer0::CapCompControl0::get_cap_comp_value();
 	}
 
 	static void startCapture()
@@ -99,16 +99,16 @@ private:
 		BCSCTL1 |= DIVA_3;                        // Select Aclk with divide by 8
 		//Set up the output in
 		//Setup to capture aclk using smclk as source
-		Timer0::CapCompControl0::start_capture(McuPeripheral::CapCompSelect::CCIB);
-		Timer0::clear_timer();
-		Timer0::start_timer(Timer_Mode::CONT_MODE,Timer_Source::SMCLK);
+//TODO		Timer0::CapCompControl0::start_capture(McuPeripheral::CapCompSelect::CCIB);
+//TODO		Timer0::clear_timer();
+//TODO		Timer0::start_timer(Timer_Mode::CONT_MODE,Timer_Source::SMCLK);
 
 	}
 
 	static void stopCapture()
 	{
-		Timer0::CapCompControl0::stop_capture();
-		Timer0::stop_timer();
+//TODO		Timer0::CapCompControl0::stop_capture();
+//TODO		Timer0::stop_timer();
 	}
 
 	static CalConstants mCalConstants[4];

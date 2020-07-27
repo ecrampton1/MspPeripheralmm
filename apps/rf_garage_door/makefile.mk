@@ -1,5 +1,5 @@
 #name of the target binary
-TARGET:=rf_hcsr04
+TARGET:=rf_garage_door
 
 mkfile_path := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 

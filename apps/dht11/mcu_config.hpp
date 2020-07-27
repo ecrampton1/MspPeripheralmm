@@ -22,7 +22,9 @@ using dhtDataPin = Periph::McuPin<McuPort2,BIT3>;
 using uart =  Periph::McuUart<UartA0, Periph::BaudRate::BAUD_115200, clock_speed>;
 using sys =  Periph::McuSystem<clock_speed>;
 
-using msp430Timer = Periph::McuTimer< Timer_Source::SMCLK, Timer0, 19000 , (int32_t) clock_speed >;
+using timerConfig1 = Periph::TimerConfig< Timer_Source::SMCLK, (uint32_t) clock_speed, Periph::ClockDivider::DIVIDE_8 >;
+using msp430Timer = Periph::ContinuousTimer<Timer1,timerConfig1>;
+//using msp430Timer = Periph::McuTimer< Timer_Source::SMCLK, Timer0, 19000 , (int32_t) clock_speed >;
 
 //using mcuTimer1 = Periph::McuTimer< Timer_Source::ACLK, Timer1, 4000000 , (int32_t) clock_speed >;
 //using timer0Output = Periph::McuTimerOutput< Timer_Source::SMCLK, Timer0_A0, smclk_out , (int32_t) clock_speed >;

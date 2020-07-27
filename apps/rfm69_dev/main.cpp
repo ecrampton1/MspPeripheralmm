@@ -5,70 +5,41 @@
 
 static const char* AesKey = "thisIsEncryptKey";
 
-static uint8_t buffer[66];
 
 
-struct Payload {
-  int16_t           nodeId; //store this nodeId
-  uint32_t uptime; //uptime in ms
-  uint32_t         temp;   //temperature maybe?
-};
-
-void setup()
-{
-	led0::clear();
-	led0::output();
+void setup() {
 	sys::init();
-	sys::enableWatchDog(); //starts counting for system time
+
 	uart::init();
-	uart::send("Init\n");
-	rfm69::init();
-	//rfm69::setEncryptionKey(AesKey);
-	rfm69::enableRx();
-	rfm69::printAllRegisters();
-	rfm69::setNodeAddress(75);
-	rfm69::setNetworkAddress(100);
-}
+	sys::enableWatchDog(); //starts counting for system time
+	Handler::begin(9);
 
+	nvmSegD::init();
+	//initializeIncomingMessages();
+	PRINT("SETUP!",ENDL)
+	uint32_t temp = 0;
+	const uint32_t expected = 0x12345678;
+	bool ret = false;
+	//Temporary flash setup.
 
-void receiver()
-{
-	PacketHeader* header = reinterpret_cast<PacketHeader*>(buffer);
-	if(rfm69::isPayloadReady()) {
-		led0::toggle();
-		rfm69::readPayload(buffer,sizeof(buffer));
-		uart::send(header->Control);
-		uart::sendLine();
-		Payload* payload  = reinterpret_cast<Payload*>(&buffer[sizeof(PacketHeader)]);
-		PRINT(payload->nodeId," - ",payload->uptime," - ",payload->temp,ENDL)
-		rfm69::enableRx();
+	ret = nvmSegD::read_block(0,(uint8_t*)&temp,sizeof(temp));
+
+	if((temp == expected))
+	{
+		PRINT("Match Expected: ",expected,"Actual: ", temp,ENDL)
 	}
-}
+	else
+	{
 
-void sender()
-{
-	Payload* payload = reinterpret_cast<Payload*>(&buffer[0]);
-	payload->nodeId = 99;
-	payload->uptime = sys::millis();
-	payload->temp = 37;
-
-	bool ret = rfm69::writePayloadWithAck(buffer,sizeof(Payload),99);
-	if(ret == true) {
-		led0::toggle();
-	}
-	else {
-		led0::set();
+		ret = nvmSegD::write_byte(0,(uint8_t*)&expected,sizeof(expected));
+		PRINT("Expected: ",expected,"Actual: ", temp,ENDL)
 	}
 
 }
 
-void loop()
-{
+void loop() {
 
-	receiver();
-	//sender();
-	//sys::delayInMs(500);
-
+	Handler::serviceOnce();
 }
 
 

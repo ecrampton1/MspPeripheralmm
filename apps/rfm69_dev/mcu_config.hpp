@@ -8,14 +8,16 @@
 #include "msp430/msp_uart.hpp"
 #include "msp430/msp_timer.hpp"
 #include "msp430/msp_spi.hpp"
+#include "msp430/msp_nvm.hpp"
 //Libraries
 #include "rfm69/rfm69.hpp"
+#include "rfm69_message_handler.hpp"
 
 namespace Periph = McuPeripheral;
 
 constexpr Speed clock_speed = Speed::SPEED_16MHZ;
 
-using led0 =  Periph::McuPin<McuPort1,BIT0>;
+//using led0 =  Periph::McuPin<McuPort1,BIT0>;
 
 //nrf24l01 pins
 using rfm_nss = Periph::McuPin<McuPort2,BIT0>;
@@ -26,7 +28,9 @@ using fake_pin = Periph::FakePin;
 using uart =  Periph::McuUart<UartA0, Periph::BaudRate::BAUD_115200, clock_speed>;
 using sys =  Periph::McuSystem<clock_speed>;
 using spi = Periph::McuSpi<SpiB0,Periph::SpiClock::SPI_EDGE2_LOW,Periph::SpiBitOrder::SPI_MSB,4 >;
-using rfm69 = Rfm69<spi, sys, rfm_nss,rfm_irq, CarrierFrequency::FREQUENCY_915, uart>;
+using RF = Rfm69<spi, sys, rfm_nss,rfm_irq, CarrierFrequency::FREQUENCY_915, uart>;
+using Handler = PeripheralMessages::RFM69Handler;
+using nvmSegD = Periph::McuNvm<Periph::InformationDMemory,clock_speed>;
 
 
 

@@ -1,6 +1,6 @@
 SHELL := /bin/bash
 ARCH:= msp430
-MSPLOAD:= ./mspload
+MSPLOAD:= ./mspload.sh
 
 include xcompile.mk
 
